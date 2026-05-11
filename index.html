@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>海外增长看板高保真原型</title>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --panel: #ffffff;
+      --panel-soft: #f7f9fc;
+      --line: #d8dee8;
+      --line-soft: #e7ecf3;
+      --text: #2f3747;
+      --text-soft: #7d8799;
+      --nav: #2c3f52;
+      --nav-deep: #243545;
+      --nav-active: #36506a;
+      --nav-red: #ff3f3f;
+      --brand: #5c94e8;
+      --brand-deep: #467ed2;
+      --shadow: 0 14px 38px rgba(25, 41, 61, 0.08);
+      --danger: #ff6f6f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      min-width: 1360px;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 258px;
+      background: linear-gradient(180deg, var(--nav-deep), var(--nav));
+      color: #dfe8f1;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 8px 0 28px rgba(18, 30, 43, 0.12);
+    }
+
+    .brand-block {
+      padding: 46px 24px 30px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+    }
+
+    .avatar {
+      width: 92px;
+      height: 92px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #c9beff, #b6aaf5);
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: inset 0 2px 12px rgba(255, 255, 255, 0.25);
+    }
+
+    .site-name {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .site-arrow {
+      margin-left: 4px;
+      color: #edf2f8;
+      font-size: 14px;
+    }
+
+    .nav-scroll {
+      flex: 1;
+      overflow: auto;
+      padding: 16px 0 28px;
+    }
+
+    .nav-section {
+      margin-bottom: 10px;
+    }
+
+    .nav-parent {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      font-size: 15px;
+      color: #d4dfeb;
+      opacity: 0.88;
+    }
+
+    .nav-parent .chevron {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .nav-group-label {
+      margin: 18px 0 8px;
+      padding: 0 18px;
+      color: var(--nav-red);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 12px 18px 12px 32px;
+      font-size: 14px;
+      color: var(--nav-red);
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-item.active {
+      background: var(--nav-active);
+      color: #fff;
+      position: relative;
+      font-weight: 700;
+    }
+
+    .nav-item.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 9px;
+      bottom: 9px;
+      width: 4px;
+      background: #86b4ff;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 58px;
+      background: #fff;
+      border-bottom: 2px solid #314355;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      padding-right: 20px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .top-icon {
+      width: 64px;
+      display: grid;
+      place-items: center;
+      color: #959da9;
+      border-right: 1px solid #edf1f6;
+      font-size: 20px;
+    }
+
+    .welcome {
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      color: #9aa3af;
+      font-size: 14px;
+      border-right: 1px solid #edf1f6;
+      background: #fff;
+    }
+
+    .top-title {
+      display: flex;
+      align-items: center;
+      padding: 0 34px;
+      background: #314355;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      min-width: 238px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: #939daa;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .workspace {
+      padding: 28px 24px 34px;
+      overflow: auto;
+      min-width: 0;
+    }
+
+    .content-surface {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 28px;
+      padding: 24px;
+      min-height: calc(100vh - 120px);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .segmented {
+      display: inline-flex;
+      background: #d7d7d7;
+      padding: 6px;
+      border-radius: 12px;
+      gap: 0;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8);
+    }
+
+    .segmented.outline {
+      background: transparent;
+      padding: 0;
+      border: 1px solid #a9adb4;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: none;
+    }
+
+    .seg-btn {
+      border: none;
+      background: transparent;
+      color: #555;
+      padding: 14px 36px;
+      min-width: 148px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 10px;
+    }
+
+    .segmented.outline .seg-btn.active {
+      border-radius: 0;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #363d48;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .form-group label {
+      white-space: nowrap;
+    }
+
+    .field,
+    .field-inline,
+    .date-field {
+      height: 56px;
+      border: 1px solid #d8dfeb;
+      border-radius: 10px;
+      background: #fff;
+      color: #555f6d;
+      padding: 0 18px;
+      min-width: 198px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .field-inline {
+      min-width: 170px;
+    }
+
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 56px;
+      border: 1px solid #d8dfeb;
+      border-radius: 10px;
+      background: #fff;
+      padding: 0 16px;
+      color: #c3c9d3;
+      min-width: 450px;
+    }
+
+    .date-range.compact {
+      min-width: 400px;
+    }
+
+    .date-range .divider {
+      color: #737b88;
+      font-weight: 700;
+      padding: 0 6px;
+    }
+
+    .date-field {
+      min-width: 0;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      color: #a2aab6;
+    }
+
+    .date-icon {
+      color: #b7bfca;
+      font-size: 18px;
+    }
+
+    .btn {
+      height: 58px;
+      border: none;
+      border-radius: 10px;
+      padding: 0 28px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--brand-deep);
+    }
+
+    .btn.secondary {
+      background: #eef3fb;
+      color: var(--brand-deep);
+      border: 1px solid #d8e4fa;
+    }
+
+    .btn.ghost {
+      background: #f4f6f8;
+      color: #5c6572;
+      border: 1px solid #d7dee8;
+    }
+
+    .btn.large {
+      min-width: 262px;
+      font-size: 20px;
+      height: 86px;
+      border-radius: 12px;
+    }
+
+    .table-panel {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow: auto;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1180px;
+    }
+
+    thead tr:first-child th {
+      background: #edf3fb;
+      color: #929baa;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    thead tr:last-child th {
+      background: #edf3fb;
+      color: #8d97a7;
+      font-weight: 700;
+    }
+
+    th,
+    td {
+      padding: 18px 18px;
+      text-align: center;
+      border-bottom: 1px solid #e6ebf2;
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 16px;
+    }
+
+    td {
+      color: #737c8b;
+      font-size: 15px;
+      background: #fff;
+    }
+
+    tbody tr:hover td {
+      background: #fbfcff;
+    }
+
+    td.linkish,
+    .text-link {
+      color: var(--brand);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    td.linkish:hover,
+    .text-link:hover {
+      text-decoration: underline;
+    }
+
+    .danger {
+      color: var(--danger);
+    }
+
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px 20px;
+      background: #fff;
+      color: #7c8592;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 15px;
+    }
+
+    .page-size {
+      height: 40px;
+      min-width: 108px;
+      padding: 0 14px;
+      border: 1px solid #d8dfeb;
+      border-radius: 8px;
+      background: #fff;
+      color: #5f6876;
+    }
+
+    .pagination {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid #e8edf4;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .page-chip {
+      min-width: 26px;
+      text-align: center;
+      color: #596271;
+      font-size: 14px;
+    }
+
+    .page-chip.active {
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    .note-strip {
+      margin-top: 12px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #f6f9fe;
+      color: #70809a;
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px solid #dfe8f6;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(40, 40, 40, 0.78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 28px;
+    }
+
+    .modal {
+      width: min(1280px, calc(100vw - 120px));
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.18);
+      position: relative;
+      padding: 22px 26px 28px;
+    }
+
+    .modal.small {
+      width: min(900px, calc(100vw - 200px));
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 16px;
+      color: #333942;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      font-size: 42px;
+      line-height: 1;
+      cursor: pointer;
+      color: #000;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding-top: 18px;
+    }
+
+    .modal-actions .btn {
+      min-width: 176px;
+    }
+
+    .editor-table input,
+    .editor-table select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid #d8deea;
+      border-radius: 8px;
+      padding: 0 14px;
+      background: #fff;
+      color: #454e5e;
+    }
+
+    .editor-table td {
+      padding: 16px 12px;
+    }
+
+    .muted {
+      color: #939dac;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef5ff;
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 700;
+      margin-left: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: rgba(34, 44, 59, 0.96);
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 16px 30px rgba(11, 20, 33, 0.2);
+      z-index: 60;
+      min-width: 220px;
+      max-width: 420px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1480px) {
+      .toolbar {
+        align-items: flex-start;
+      }
+
+      .date-range {
+        min-width: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="avatar">i</div>
+        <div class="site-name">海外<span class="site-arrow">▼</span></div>
+      </div>
+      <div class="nav-scroll">
+        <div class="nav-section">
+          <div class="nav-parent">海外-AI图片管理 <span class="chevron">‹</span></div>
+          <div class="nav-parent">PPT数据看板 <span class="chevron">‹</span></div>
+          <div class="nav-parent">运营管理 <span class="chevron">‹</span></div>
+          <div class="nav-parent">模板中心 <span class="chevron">‹</span></div>
+          <div class="nav-parent">PPT海外组件管理 <span class="chevron">‹</span></div>
+          <div class="nav-parent">产品管理 <span class="chevron">‹</span></div>
+          <div class="nav-parent">数据统计 <span class="chevron">‹</span></div>
+          <div class="nav-parent">AI主题组件分类设置 <span class="chevron">‹</span></div>
+        </div>
+        <div class="nav-group-label">APP-增长数据看板</div>
+        <div id="navItems"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="top-icon">☰</div>
+          <div class="top-icon">⏪</div>
+          <div class="welcome">欢迎登录</div>
+          <div class="top-title" id="topTitle"></div>
+        </div>
+        <div class="topbar-right">
+          <span>⏩</span>
+          <span>关闭操作 ▾</span>
+          <span>⇥ 退出</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="content-surface">
+          <div id="pageRoot"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot"></div>
+
+  <script>
+    const menus = [
+      { id: "adCost", label: "广告费录入表", title: "广告费录入表" },
+      { id: "detail", label: "渠道明细表", title: "渠道明细表" },
+      { id: "roi", label: "ROI数据看板", title: "ROI数据看板" },
+      { id: "dailyRetentionDetail", label: "分日留存明细", title: "分日留存明细", hidden: true },
+      { id: "renewal", label: "续费数据表", title: "续费数据表" },
+      { id: "retention", label: "用户留存表", title: "用户留存表" }
+    ];
+
+    const channelOptions = [
+      { value: "all", label: "全部" },
+      { value: "google", label: "google" },
+      { value: "facebook", label: "facebook" },
+      { value: "asa", label: "ASA" },
+      { value: "organic", label: "organic" }
+    ];
+
+    const systemOptions = [
+      { value: "all", label: "全部" },
+      { value: "安卓", label: "安卓" },
+      { value: "iOS", label: "iOS" }
+    ];
+
+    const vipOptions = [
+      { value: "all", label: "全部" },
+      { value: "monthly", label: "月会员" },
+      { value: "yearly", label: "年会员" },
+      { value: "lifetime", label: "终身会员" }
+    ];
+
+    const retentionRows = [
+      { month: "2024-06", channel: "google", activeUsers: 1000, regUsers: 1000, counts: [1000, 732, 618, 564, 505, 469, 430, 396, 364, 331, 309] },
+      { month: "2024-05", channel: "facebook", activeUsers: 888, regUsers: 888, counts: [888, 644, 551, 487, 443, 397, 362, 328, 302, 281, 268] },
+      { month: "2024-04", channel: "asa", activeUsers: 999, regUsers: 999, counts: [999, 702, 590, 536, 499, 468, 439, 412, 381, 357, 330] },
+      { month: "2024-03", channel: "google", activeUsers: 647, regUsers: 647, counts: [647, 472, 408, 357, 318, 287, 255, 236, 218, 199, 186] },
+      { month: "2024-02", channel: "organic", activeUsers: 1796, regUsers: 1796, counts: [1796, 1288, 1168, 1072, 978, 895, 810, 755, 689, 624, 590] },
+      { month: "2024-01", channel: "facebook", activeUsers: 6868, regUsers: 6868, counts: [6868, 5114, 4680, 4216, 3860, 3498, 3212, 2940, 2666, 2413, 2210] }
+    ];
+
+    retentionRows.forEach((row) => {
+      row.rates = row.counts.map((value) => `${((value / row.regUsers) * 100).toFixed(2)}%`);
+    });
+
+    const renewalRows = [
+      { month: "2026-05", channel: "google", vip: "yearly", firstUsers: 990.29, firstAmount: 990.29, arppu: 990.29, ltv: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatOrders: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatAmount: [752, 803, 871, 884, 917, 944, 958, 1001, 1088, 1210, 1332, 1496, 1703] },
+      { month: "2026-04", channel: "facebook", vip: "monthly", firstUsers: 925.10, firstAmount: 925.10, arppu: 925.10, ltv: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatOrders: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatAmount: [688, 733, 801, 829, 865, 902, 935, 978, 1068, 1173, 1294, 1440, 1641] },
+      { month: "2026-03", channel: "asa", vip: "yearly", firstUsers: 1002.25, firstAmount: 1002.25, arppu: 1002.25, ltv: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatOrders: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatAmount: [744, 816, 892, 907, 948, 980, 1009, 1076, 1162, 1271, 1409, 1582, 1774] },
+      { month: "2026-02", channel: "google", vip: "monthly", firstUsers: 880.40, firstAmount: 880.40, arppu: 880.40, ltv: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatOrders: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatAmount: [645, 704, 763, 794, 833, 870, 905, 962, 1018, 1140, 1264, 1398, 1578] },
+      { month: "2026-01", channel: "organic", vip: "lifetime", firstUsers: 1110.00, firstAmount: 1110.00, arppu: 1110.00, ltv: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatOrders: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatAmount: [804, 863, 926, 948, 979, 1033, 1070, 1158, 1260, 1388, 1527, 1691, 1910] },
+      { month: "2025-12", channel: "facebook", vip: "yearly", firstUsers: 964.52, firstAmount: 964.52, arppu: 964.52, ltv: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatOrders: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatAmount: [712, 781, 843, 869, 904, 940, 968, 1030, 1118, 1230, 1354, 1517, 1730] }
+    ];
+
+    const roiRows = [
+      { month: "2026-05", channel: "google", marketCost: 990.29, regs: 1000, cumulativeUsers: 233, cumulativeRevenue: 9810.23, cumulativeOrders: 418, paySeries: [23.30, 25.80, 27.60, 29.40, 30.80, 31.60, 32.20, 33.10, 34.20, 35.80, 37.10, 38.80, 40.50], roiSeries: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], orderSeries: [0.42, 0.47, 0.52, 0.57, 0.61, 0.66, 0.69, 0.73, 0.77, 0.82, 0.89, 0.95, 1.03] },
+      { month: "2026-04", channel: "facebook", marketCost: 925.10, regs: 963, cumulativeUsers: 214, cumulativeRevenue: 8940.20, cumulativeOrders: 396, paySeries: [22.22, 24.77, 26.30, 27.94, 29.31, 30.22, 31.15, 32.28, 33.85, 35.20, 36.68, 38.11, 39.46], roiSeries: [0.71, 0.79, 0.85, 0.86, 0.89, 0.90, 0.92, 0.97, 1.08, 1.20, 1.31, 1.46, 1.65], orderSeries: [0.40, 0.44, 0.48, 0.53, 0.57, 0.60, 0.64, 0.68, 0.72, 0.77, 0.83, 0.89, 0.97] },
+      { month: "2026-03", channel: "asa", marketCost: 1002.25, regs: 1011, cumulativeUsers: 248, cumulativeRevenue: 10340.11, cumulativeOrders: 451, paySeries: [24.53, 26.98, 28.82, 30.11, 31.65, 32.74, 33.90, 35.38, 36.91, 38.56, 40.30, 42.13, 44.02], roiSeries: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], orderSeries: [0.43, 0.48, 0.53, 0.57, 0.61, 0.66, 0.69, 0.74, 0.79, 0.85, 0.92, 0.98, 1.06] },
+      { month: "2026-02", channel: "google", marketCost: 880.40, regs: 942, cumulativeUsers: 202, cumulativeRevenue: 8258.90, cumulativeOrders: 377, paySeries: [21.44, 23.88, 25.16, 26.64, 27.82, 28.91, 29.99, 31.03, 32.38, 33.94, 35.14, 36.72, 38.21], roiSeries: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], orderSeries: [0.37, 0.41, 0.46, 0.49, 0.54, 0.57, 0.61, 0.65, 0.69, 0.74, 0.80, 0.86, 0.92] },
+      { month: "2026-01", channel: "organic", marketCost: 1110.00, regs: 1130, cumulativeUsers: 287, cumulativeRevenue: 11804.10, cumulativeOrders: 508, paySeries: [25.40, 27.21, 29.02, 30.57, 31.89, 33.10, 34.34, 35.93, 37.54, 39.11, 41.22, 43.18, 45.66], roiSeries: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], orderSeries: [0.45, 0.49, 0.54, 0.59, 0.63, 0.67, 0.71, 0.77, 0.82, 0.89, 0.95, 1.02, 1.11] },
+      { month: "2025-12", channel: "facebook", marketCost: 964.52, regs: 988, cumulativeUsers: 226, cumulativeRevenue: 9325.40, cumulativeOrders: 401, paySeries: [22.87, 24.31, 26.08, 27.36, 28.74, 29.77, 30.62, 32.01, 33.57, 34.92, 36.42, 37.95, 39.58], roiSeries: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], orderSeries: [0.40, 0.43, 0.48, 0.51, 0.56, 0.59, 0.63, 0.68, 0.73, 0.79, 0.85, 0.91, 0.99] }
+    ];
+
+    const adCostRowsSeed = [
+      {
+        id: 1,
+        date: "2026-6-6",
+        system: "安卓",
+        channel: "google",
+        amount: 1000.00,
+        operatorId: 18,
+        operatorName: "三开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2024-06-06", amount: 1000.00, operatorId: 18, operatorName: "三开", opTime: "2024-06-06 18:08:07" },
+          { type: "编辑", date: "2024-06-06", amount: 28900.00, operatorId: 10, operatorName: "三开", opTime: "2024-11-10 17:00:05" },
+          { type: "编辑", date: "2024-06-06", amount: 0.00, operatorId: 18, operatorName: "南南", opTime: "2024-11-12 19:00:05" }
+        ]
+      },
+      {
+        id: 2,
+        date: "2026-6-6",
+        system: "iOS",
+        channel: "facebook",
+        amount: 888.88,
+        operatorId: 17,
+        operatorName: "开开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2026-06-06", amount: 888.88, operatorId: 17, operatorName: "开开", opTime: "2026-06-06 18:08:07" }
+        ]
+      },
+      {
+        id: 3,
+        date: "2026-6-6",
+        system: "iOS",
+        channel: "ASA",
+        amount: 888.88,
+        operatorId: 17,
+        operatorName: "开开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2026-06-06", amount: 888.88, operatorId: 17, operatorName: "开开", opTime: "2026-06-06 18:08:07" }
+        ]
+      },
+      {
+        id: 4,
+        date: "2026-6-5",
+        system: "安卓",
+        channel: "google",
+        amount: 1000.00,
+        operatorId: 18,
+        operatorName: "三开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2026-06-05", amount: 1000.00, operatorId: 18, operatorName: "三开", opTime: "2026-06-06 18:08:07" }
+        ]
+      },
+      {
+        id: 5,
+        date: "2026-6-5",
+        system: "iOS",
+        channel: "facebook",
+        amount: 888.88,
+        operatorId: 17,
+        operatorName: "开开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2026-06-05", amount: 888.88, operatorId: 17, operatorName: "开开", opTime: "2026-06-06 18:08:07" }
+        ]
+      },
+      {
+        id: 6,
+        date: "2026-6-5",
+        system: "iOS",
+        channel: "ASA",
+        amount: 888.88,
+        operatorId: 17,
+        operatorName: "开开",
+        opTime: "2026-6-6 18:08:07",
+        history: [
+          { type: "新增", date: "2026-06-05", amount: 888.88, operatorId: 17, operatorName: "开开", opTime: "2026-06-06 18:08:07" }
+        ]
+      }
+    ];
+
+    const detailStageMetrics = [
+      { key: "revenue", label: "付费金额/$", formatter: formatMoney },
+      { key: "users", label: "付费人数", formatter: formatNumber },
+      { key: "rate", label: "付费率", formatter: formatPercent },
+      { key: "arpu", label: "ARPU/$", formatter: formatMoney },
+      { key: "roi", label: "ROI", formatter: formatRatio }
+    ];
+
+    const detailShortStageConfigs = [
+      { key: "sameDay", label: "当日注册付费" },
+      { key: "d1", label: "D1累计" },
+      { key: "d2", label: "D2累计" },
+      { key: "d3", label: "D3累计" },
+      { key: "d4", label: "D4累计" },
+      { key: "d5", label: "D5累计" },
+      { key: "d6", label: "D6累计" },
+      { key: "d7", label: "D7累计" },
+      { key: "d14", label: "D14累计" },
+      { key: "d30", label: "D30累计" },
+      { key: "nextMonth", label: "次月单月" }
+    ];
+
+    const detailMonthlyStageConfigs = Array.from({ length: 12 }, (_, index) => ({
+      key: `m${index + 1}`,
+      label: `M${index + 1}累计`
+    }));
+
+    const detailRowsBase = [
+      {
+        date: "2024-06-06",
+        channel: "google",
+        system: "安卓",
+        marketCost: 1000.00,
+        activations: 10000,
+        activationWow: 12.40,
+        activationYoy: 88.50,
+        activationCostWow: -5.10,
+        activationCostYoy: -46.95,
+        regs: 1000,
+        shortRates: [6.00, 7.20, 8.40, 9.10, 10.00, 10.80, 11.50, 12.20, 14.90, 20.80, 7.60],
+        shortArpus: [1.02, 1.24, 1.42, 1.60, 1.78, 1.95, 2.11, 2.28, 2.96, 4.68, 1.92],
+        monthlyRates: [22.40, 24.80, 26.50, 28.10, 29.70, 31.00, 32.30, 33.70, 35.00, 36.40, 37.60, 39.10],
+        monthlyArpus: [5.16, 6.02, 6.78, 7.45, 8.10, 8.76, 9.41, 10.08, 10.72, 11.44, 12.15, 12.98]
+      },
+      {
+        date: "2024-06-06",
+        channel: "ASA",
+        system: "iOS",
+        marketCost: 888.88,
+        activations: 8888,
+        activationWow: -6.20,
+        activationYoy: 55.68,
+        activationCostWow: 4.80,
+        activationCostYoy: -28.60,
+        regs: 832,
+        shortRates: [5.40, 6.70, 7.90, 8.80, 9.50, 10.10, 10.80, 11.50, 14.20, 19.10, 6.90],
+        shortArpus: [0.96, 1.13, 1.31, 1.48, 1.66, 1.80, 1.95, 2.10, 2.72, 4.28, 1.73],
+        monthlyRates: [20.80, 23.10, 24.60, 25.90, 27.00, 28.40, 29.80, 31.20, 32.70, 33.90, 35.10, 36.50],
+        monthlyArpus: [4.62, 5.45, 6.10, 6.68, 7.16, 7.70, 8.18, 8.75, 9.28, 9.82, 10.45, 11.06]
+      },
+      {
+        date: "2024-06-06",
+        channel: "facebook",
+        system: "iOS",
+        marketCost: 888.88,
+        activations: 8888,
+        activationWow: 8.00,
+        activationYoy: 88.08,
+        activationCostWow: -7.40,
+        activationCostYoy: -38.20,
+        regs: 888,
+        shortRates: [5.80, 7.10, 8.30, 9.20, 10.00, 10.70, 11.30, 12.00, 14.80, 20.10, 7.20],
+        shortArpus: [0.98, 1.19, 1.38, 1.57, 1.74, 1.89, 2.04, 2.20, 2.88, 4.52, 1.82],
+        monthlyRates: [21.90, 24.10, 25.80, 27.20, 28.60, 29.90, 31.10, 32.40, 33.70, 34.90, 36.10, 37.40],
+        monthlyArpus: [4.94, 5.79, 6.48, 7.08, 7.62, 8.15, 8.67, 9.21, 9.78, 10.33, 10.94, 11.58]
+      },
+      {
+        date: "2024-06-05",
+        channel: "google",
+        system: "安卓",
+        marketCost: 1000.00,
+        activations: 10000,
+        activationWow: 8.80,
+        activationYoy: 88.08,
+        activationCostWow: -3.30,
+        activationCostYoy: -45.10,
+        regs: 1000,
+        shortRates: [5.70, 6.90, 8.10, 8.90, 9.70, 10.50, 11.20, 11.90, 14.60, 20.20, 7.10],
+        shortArpus: [0.99, 1.21, 1.39, 1.56, 1.74, 1.90, 2.05, 2.21, 2.90, 4.56, 1.84],
+        monthlyRates: [21.70, 24.00, 25.70, 27.10, 28.40, 29.80, 31.10, 32.50, 33.80, 35.10, 36.30, 37.80],
+        monthlyArpus: [4.98, 5.86, 6.52, 7.12, 7.70, 8.27, 8.80, 9.36, 9.94, 10.52, 11.10, 11.78]
+      },
+      {
+        date: "2024-06-05",
+        channel: "ASA",
+        system: "iOS",
+        marketCost: 888.88,
+        activations: 8888,
+        activationWow: 5.56,
+        activationYoy: 55.68,
+        activationCostWow: -4.20,
+        activationCostYoy: -27.50,
+        regs: 820,
+        shortRates: [5.10, 6.40, 7.50, 8.30, 9.10, 9.80, 10.40, 11.00, 13.70, 18.60, 6.70],
+        shortArpus: [0.92, 1.08, 1.25, 1.42, 1.58, 1.72, 1.86, 2.02, 2.62, 4.10, 1.66],
+        monthlyRates: [20.10, 22.40, 23.90, 25.20, 26.40, 27.80, 29.00, 30.30, 31.60, 32.90, 34.10, 35.60],
+        monthlyArpus: [4.48, 5.24, 5.90, 6.43, 6.95, 7.44, 7.96, 8.46, 8.98, 9.54, 10.08, 10.70]
+      },
+      {
+        date: "2024-06-05",
+        channel: "facebook",
+        system: "iOS",
+        marketCost: 888.88,
+        activations: 8888,
+        activationWow: 5.56,
+        activationYoy: 55.68,
+        activationCostWow: -2.90,
+        activationCostYoy: -30.40,
+        regs: 888,
+        shortRates: [5.30, 6.60, 7.80, 8.70, 9.50, 10.20, 10.80, 11.40, 14.10, 19.20, 6.90],
+        shortArpus: [0.95, 1.14, 1.32, 1.50, 1.67, 1.82, 1.97, 2.11, 2.76, 4.32, 1.74],
+        monthlyRates: [20.90, 23.20, 24.80, 26.10, 27.40, 28.70, 29.90, 31.20, 32.50, 33.80, 35.00, 36.30],
+        monthlyArpus: [4.66, 5.44, 6.10, 6.66, 7.20, 7.72, 8.22, 8.75, 9.30, 9.84, 10.42, 10.98]
+      }
+    ];
+
+    const detailRows = detailRowsBase.map((row) => {
+      const shortStages = Object.fromEntries(detailShortStageConfigs.map((config, index) => [
+        config.key,
+        buildChannelStageMetrics(row.regs, row.marketCost, row.shortRates[index], row.shortArpus[index])
+      ]));
+      const monthlyStages = Object.fromEntries(detailMonthlyStageConfigs.map((config, index) => [
+        config.key,
+        buildChannelStageMetrics(row.regs, row.marketCost, row.monthlyRates[index], row.monthlyArpus[index])
+      ]));
+
+      return {
+        ...row,
+        regCost: row.marketCost / row.regs,
+        regRate: (row.regs / row.activations) * 100,
+        activationCost: row.marketCost / row.activations,
+        shortStages,
+        monthlyStages
+      };
+    });
+
+    const dailyRetentionRows = [
+      { regDate: "2024-06-01", channel: "google", system: "安卓", registrations: 280, retention: [198, 176, 165, 150, 142, 136, 130, 121, 108, 86, 69] },
+      { regDate: "2024-06-02", channel: "google", system: "安卓", registrations: 296, retention: [209, 183, 171, 161, 149, 141, 136, 126, 115, 91, 73] },
+      { regDate: "2024-06-03", channel: "facebook", system: "iOS", registrations: 264, retention: [181, 160, 148, 136, 129, 123, 118, 106, 96, 77, 61] },
+      { regDate: "2024-06-04", channel: "ASA", system: "iOS", registrations: 277, retention: [190, 169, 156, 145, 138, 132, 126, 114, 102, 80, 65] },
+      { regDate: "2024-06-05", channel: "google", system: "安卓", registrations: 301, retention: [218, 194, 181, 169, 159, 151, 146, 132, 118, 94, 75] }
+    ];
+
+    const state = {
+      page: "retention",
+      retentionTab: "count",
+      dailyRetentionTab: "count",
+      renewalTab: "ltv",
+      roiTab: "rate",
+      filters: {
+        retentionChannel: "all",
+        detailChannel: "all",
+        detailSystem: "all",
+        dailyRetentionChannel: "all",
+        renewalChannel: "all",
+        renewalVip: "all",
+        adChannel: "all",
+        roiChannel: "all"
+      },
+      adCostRows: JSON.parse(JSON.stringify(adCostRowsSeed)),
+      modal: null,
+      toast: null
+    };
+
+    function optionMarkup(options, current) {
+      return options.map((option) => `<option value="${option.value}" ${option.value === current ? "selected" : ""}>${option.label}</option>`).join("");
+    }
+
+    function formatNumber(value) {
+      if (typeof value === "number" && Number.isInteger(value)) {
+        return String(value);
+      }
+      return Number(value).toFixed(2);
+    }
+
+    function formatMoney(value) {
+      return Number(value).toFixed(2);
+    }
+
+    function formatRatio(value) {
+      const num = Number(value);
+      return num >= 1 ? num.toFixed(2).replace(/\.00$/, ".0") : num.toFixed(2);
+    }
+
+    function formatPercent(value) {
+      return `${Number(value).toFixed(2)}%`;
+    }
+
+    function formatSignedPercent(value) {
+      const num = Number(value);
+      return `${num > 0 ? "+" : ""}${num.toFixed(2)}%`;
+    }
+
+    function buildChannelStageMetrics(regs, marketCost, rate, arpu) {
+      const users = Math.round(regs * (rate / 100));
+      const revenue = regs * arpu;
+      return {
+        revenue,
+        users,
+        rate,
+        arpu,
+        roi: revenue / marketCost
+      };
+    }
+
+    function renderChannelStageCells(stage) {
+      return detailStageMetrics.map((metric) => `<td>${metric.formatter(stage[metric.key])}</td>`).join("");
+    }
+
+    function regCost(row) {
+      return row.marketCost / row.regs;
+    }
+
+    function paidUserCost(row) {
+      return row.marketCost / row.cumulativeUsers;
+    }
+
+    function orderCost(row) {
+      return row.marketCost / row.cumulativeOrders;
+    }
+
+    function pageTitle() {
+      return menus.find((item) => item.id === state.page)?.title || "海外增长看板";
+    }
+
+    function renderNav() {
+      const container = document.getElementById("navItems");
+      container.innerHTML = menus.filter((item) => !item.hidden).map((item) => `
+        <div class="nav-item ${state.page === item.id ? "active" : ""}" data-action="switch-page" data-page="${item.id}">
+          ${item.label}
+        </div>
+      `).join("");
+    }
+
+    function renderPagination(total) {
+      return `
+        <div class="table-footer">
+          <div class="footer-left">
+            <span>共 ${total} 条</span>
+            <select class="page-size">
+              <option selected>20条/页</option>
+              <option>50条/页</option>
+              <option>100条/页</option>
+            </select>
+          </div>
+          <div class="pagination">
+            <span class="page-chip">‹</span>
+            <span class="page-chip">1</span>
+            <span class="page-chip">…</span>
+            <span class="page-chip">10</span>
+            <span class="page-chip">11</span>
+            <span class="page-chip active">12</span>
+            <span class="page-chip">13</span>
+            <span class="page-chip">14</span>
+            <span class="page-chip">»</span>
+            <span class="page-chip">20</span>
+            <span class="page-chip">›</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRetentionPage() {
+      const channel = state.filters.retentionChannel;
+      const rows = retentionRows.filter((row) => channel === "all" || row.channel === channel);
+      const monthHeaders = Array.from({ length: 11 }, (_, index) => index === 0 ? "M0（当月）" : `M${index}`);
+      const body = rows.map((row) => {
+        const metrics = state.retentionTab === "count" ? row.counts : row.rates;
+        return `
+          <tr>
+            <td>${row.month}</td>
+            <td>${row.activeUsers}</td>
+            <td>${row.regUsers}</td>
+            ${metrics.map((value) => `<td>${value}</td>`).join("")}
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented">
+              <button class="seg-btn ${state.retentionTab === "count" ? "active" : ""}" data-action="set-retention-tab" data-tab="count">月留存数</button>
+              <button class="seg-btn ${state.retentionTab === "rate" ? "active" : ""}" data-action="set-retention-tab" data-tab="rate">月留存率</button>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="form-group">
+              <label>渠道筛选：</label>
+              <select class="field" data-field="retentionChannel">${optionMarkup(channelOptions, channel)}</select>
+            </div>
+            <button class="btn primary" data-action="query" data-scope="用户留存表">查询</button>
+            <button class="btn primary" data-action="export" data-scope="用户留存表">导出</button>
+            <button class="btn primary" data-action="go-detail">查看分日明细</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>月活跃用户</th>
+                  <th>注册用户</th>
+                  ${monthHeaders.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(391)}
+        </div>
+        <div class="note-strip">
+          当前原型中“月留存数 / 月留存率”共用同一套月份 cohort 结构。
+          “查看分日明细”会进入本次新增的二级看板“分日留存明细”，用于查看分日注册用户的留存数据。
+        </div>
+      `;
+    }
+
+    function renderRenewalPage() {
+      const channel = state.filters.renewalChannel;
+      const vip = state.filters.renewalVip;
+      const rows = renewalRows.filter((row) => (channel === "all" || row.channel === channel) && (vip === "all" || row.vip === vip));
+      const tabConfig = {
+        ltv: { title: "LTV分月", headers: Array.from({ length: 13 }, (_, index) => `LT${index}`), key: "ltv", formatter: formatRatio },
+        orders: { title: "周期复购-订单", headers: Array.from({ length: 13 }, (_, index) => `M${index}`), key: "repeatOrders", formatter: formatRatio },
+        amount: { title: "周期复购-金额", headers: Array.from({ length: 13 }, (_, index) => `M${index}`), key: "repeatAmount", formatter: formatMoney }
+      };
+      const current = tabConfig[state.renewalTab];
+      const body = rows.map((row) => `
+        <tr>
+          <td>${row.month}</td>
+          <td>${formatMoney(row.firstUsers)}</td>
+          <td>${formatMoney(row.firstAmount)}</td>
+          <td>${formatMoney(row.arppu)}</td>
+          ${row[current.key].map((value) => `<td>${current.formatter(value)}</td>`).join("")}
+        </tr>
+      `).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented outline">
+              <button class="seg-btn ${state.renewalTab === "ltv" ? "active" : ""}" data-action="set-renewal-tab" data-tab="ltv">付费LTV</button>
+              <button class="seg-btn ${state.renewalTab === "orders" ? "active" : ""}" data-action="set-renewal-tab" data-tab="orders">复购订单</button>
+              <button class="seg-btn ${state.renewalTab === "amount" ? "active" : ""}" data-action="set-renewal-tab" data-tab="amount">复购金额</button>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="form-group">
+              <label>渠道筛选：</label>
+              <select class="field" data-field="renewalChannel">${optionMarkup(channelOptions, channel)}</select>
+            </div>
+            <div class="form-group">
+              <label>VIP类型：</label>
+              <select class="field" data-field="renewalVip">${optionMarkup(vipOptions, vip)}</select>
+            </div>
+            <button class="btn primary" data-action="query" data-scope="续费数据表">查询</button>
+            <button class="btn primary" data-action="export" data-scope="续费数据表">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">月份</th>
+                  <th rowspan="2">首次付费用户</th>
+                  <th rowspan="2">首次付费金额</th>
+                  <th rowspan="2">ARPPU</th>
+                  <th colspan="${current.headers.length}">${current.title}</th>
+                </tr>
+                <tr>
+                  ${current.headers.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(391)}
+        </div>
+      `;
+    }
+
+    function renderAdCostPage() {
+      const channel = state.filters.adChannel;
+      const rows = state.adCostRows.filter((row) => channel === "all" || row.channel.toLowerCase() === channel);
+      const body = rows.map((row) => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.system}</td>
+          <td>${row.channel}</td>
+          <td>${formatMoney(row.amount)}</td>
+          <td>${row.operatorId}</td>
+          <td>${row.operatorName}</td>
+          <td class="linkish" data-action="open-history" data-id="${row.id}">${row.opTime}</td>
+          <td class="text-link" data-action="open-editor" data-mode="edit" data-id="${row.id}">编辑</td>
+        </tr>
+      `).join("");
+
+      return `
+        <div class="toolbar" style="margin-bottom: 18px;">
+          <div class="toolbar-left">
+            <button class="btn primary large" data-action="import-excel">导入Excel</button>
+            <button class="btn primary large" data-action="open-editor" data-mode="add">新增广告费</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="form-group">
+              <label>日期:</label>
+              <div class="date-range">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>渠道筛选:</label>
+              <select class="field" data-field="adChannel">${optionMarkup(channelOptions, channel)}</select>
+            </div>
+            <div class="form-group">
+              <label>操作时间:</label>
+              <div class="date-range compact">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn primary" data-action="query" data-scope="广告费录入表">查询</button>
+            <button class="btn primary" data-action="export" data-scope="广告费录入表">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>系统</th>
+                  <th>渠道</th>
+                  <th>市场费/$</th>
+                  <th>操作用户id</th>
+                  <th>操作人</th>
+                  <th>操作时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(391)}
+        </div>
+        <div class="note-strip">
+          本页市场费统一按 <strong>$</strong> 展示与录入。若底层成本来源存在多币种，查询结果需按实时汇率折算为 <strong>$</strong> 后展示，并同步影响导出与 ROI 计算。
+        </div>
+      `;
+    }
+
+    function renderRoiPage() {
+      const channel = state.filters.roiChannel;
+      const rows = roiRows.filter((row) => channel === "all" || row.channel === channel);
+      const tabConfig = {
+        rate: {
+          title: "分月付费率",
+          leftHeaders: ["月份", "市场费（$）", "注册量", "注册成本（$）", "累计付费用户", "累计付费率", "累计付费用户成本"],
+          rowBuilder: (row) => [
+            row.month,
+            formatMoney(row.marketCost),
+            row.regs,
+            formatMoney(regCost(row)),
+            row.cumulativeUsers,
+            formatPercent((row.cumulativeUsers / row.regs) * 100),
+            formatMoney(paidUserCost(row))
+          ],
+          series: (row) => row.paySeries.map(formatPercent)
+        },
+        amount: {
+          title: "分月ROI（分月付费回滚率） = 截止各月总收入 / 当月支出市场费",
+          leftHeaders: ["月份", "市场费（$）", "注册量", "注册成本（$）", "累计付费金额", "累计ROI", "累计付费用户成本"],
+          rowBuilder: (row) => [
+            row.month,
+            formatMoney(row.marketCost),
+            row.regs,
+            formatMoney(regCost(row)),
+            formatMoney(row.cumulativeRevenue),
+            formatRatio(row.cumulativeRevenue / row.marketCost),
+            formatMoney(paidUserCost(row))
+          ],
+          series: (row) => row.roiSeries.map(formatRatio)
+        },
+        orders: {
+          title: "分月付费订单回收",
+          leftHeaders: ["月份", "市场费（$）", "注册量", "注册成本（$）", "累计付费订单", "累计订单成本", "累计付费用户成本"],
+          rowBuilder: (row) => [
+            row.month,
+            formatMoney(row.marketCost),
+            row.regs,
+            formatMoney(regCost(row)),
+            row.cumulativeOrders,
+            formatMoney(orderCost(row)),
+            formatMoney(paidUserCost(row))
+          ],
+          series: (row) => row.orderSeries.map(formatRatio)
+        }
+      };
+      const current = tabConfig[state.roiTab];
+      const metricHeaders = Array.from({ length: 13 }, (_, index) => `M${index}`);
+      const body = rows.map((row) => {
+        const leftValues = current.rowBuilder(row);
+        const rightValues = current.series(row);
+        return `
+          <tr>
+            ${leftValues.map((item) => `<td>${item}</td>`).join("")}
+            ${rightValues.map((item) => `<td>${item}</td>`).join("")}
+          </tr>
+        `;
+      }).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented outline">
+              <button class="seg-btn ${state.roiTab === "rate" ? "active" : ""}" data-action="set-roi-tab" data-tab="rate">付费率</button>
+              <button class="seg-btn ${state.roiTab === "amount" ? "active" : ""}" data-action="set-roi-tab" data-tab="amount">付费金额</button>
+              <button class="seg-btn ${state.roiTab === "orders" ? "active" : ""}" data-action="set-roi-tab" data-tab="orders">付费订单</button>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="form-group">
+              <label>渠道筛选：</label>
+              <select class="field" data-field="roiChannel">${optionMarkup(channelOptions, channel)}</select>
+            </div>
+            <button class="btn primary" data-action="query" data-scope="ROI数据看板">查询</button>
+            <button class="btn primary" data-action="export" data-scope="ROI数据看板">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  ${current.leftHeaders.map((item) => `<th rowspan="2">${item}</th>`).join("")}
+                  <th colspan="${metricHeaders.length}">${current.title}</th>
+                </tr>
+                <tr>
+                  ${metricHeaders.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(391)}
+        </div>
+        <div class="note-strip">
+          ROI 页面中的市场费与收入金额统一按 <strong>$</strong> 展示。若原始订单或投放成本存在多币种，系统应在每次查询时按实时汇率折算为 <strong>$</strong> 后再参与累计计算。
+        </div>
+      `;
+    }
+
+    function renderDetailPage() {
+      const channel = state.filters.detailChannel;
+      const system = state.filters.detailSystem;
+      const rows = detailRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel.toLowerCase() === channel;
+        const systemMatch = system === "all" || row.system === system;
+        return channelMatch && systemMatch;
+      });
+      const shortMetricSpan = detailShortStageConfigs.length * detailStageMetrics.length;
+      const monthlyMetricSpan = detailMonthlyStageConfigs.length * detailStageMetrics.length;
+      const body = rows.map((row) => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.system}</td>
+          <td>${row.channel}</td>
+          <td>${formatMoney(row.marketCost)}</td>
+          <td>${row.activations}</td>
+          <td>${formatSignedPercent(row.activationWow)}</td>
+          <td>${formatSignedPercent(row.activationYoy)}</td>
+          <td>${formatMoney(row.activationCost)}</td>
+          <td>${formatSignedPercent(row.activationCostWow)}</td>
+          <td>${formatSignedPercent(row.activationCostYoy)}</td>
+          <td>${row.regs}</td>
+          <td>${formatMoney(row.regCost)}</td>
+          <td>${formatPercent(row.regRate)}</td>
+          ${detailShortStageConfigs.map((config) => renderChannelStageCells(row.shortStages[config.key])).join("")}
+          ${detailMonthlyStageConfigs.map((config) => renderChannelStageCells(row.monthlyStages[config.key])).join("")}
+        </tr>
+      `).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="form-group">
+              <label>渠道筛选：</label>
+              <select class="field" data-field="detailChannel">${optionMarkup(channelOptions, channel)}</select>
+            </div>
+            <div class="form-group">
+              <label>系统：</label>
+              <select class="field" data-field="detailSystem">${optionMarkup(systemOptions, system)}</select>
+            </div>
+            <div class="form-group">
+              <label>日期：</label>
+              <div class="date-range compact">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+            <span class="chip">主看板</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn primary" data-action="query" data-scope="渠道明细表">查询</button>
+            <button class="btn primary" data-action="export" data-scope="渠道明细表">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="3">日期</th>
+                  <th rowspan="3">系统</th>
+                  <th rowspan="3">渠道</th>
+                  <th rowspan="3">市场费/$</th>
+                  <th colspan="3">激活</th>
+                  <th colspan="3">激活成本</th>
+                  <th colspan="3">注册</th>
+                  <th colspan="${shortMetricSpan}">注册 cohort 短周期付费转化</th>
+                  <th colspan="${monthlyMetricSpan}">注册 cohort 月度累计付费转化</th>
+                </tr>
+                <tr>
+                  <th rowspan="2">新增激活</th>
+                  <th rowspan="2">环比</th>
+                  <th rowspan="2">同比</th>
+                  <th rowspan="2">新增单价/$</th>
+                  <th rowspan="2">环比</th>
+                  <th rowspan="2">同比</th>
+                  <th rowspan="2">注册量</th>
+                  <th rowspan="2">注册成本/$</th>
+                  <th rowspan="2">注册率</th>
+                  ${detailShortStageConfigs.map((config) => `<th colspan="${detailStageMetrics.length}">${config.label}</th>`).join("")}
+                  ${detailMonthlyStageConfigs.map((config) => `<th colspan="${detailStageMetrics.length}">${config.label}</th>`).join("")}
+                </tr>
+                <tr>
+                  ${detailShortStageConfigs.map(() => detailStageMetrics.map((metric) => `<th>${metric.label}</th>`).join("")).join("")}
+                  ${detailMonthlyStageConfigs.map(() => detailStageMetrics.map((metric) => `<th>${metric.label}</th>`).join("")).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(126)}
+        </div>
+        <div class="note-strip">
+          本页按“注册发生日期 + 系统 + 渠道”展示投放 cohort 转化宽表。D1-D7、D14、D30 为截至对应天结束时的累计付费转化；
+          “次月单月”表示注册次自然月内的单月付费表现；M1-M12 表示截至对应自然月月末的累计付费转化。
+          市场费与收入统一按 <strong>$</strong> 展示，多币种按查询时实时汇率折算。
+        </div>
+      `;
+    }
+
+    function renderDailyRetentionDetailPage() {
+      const channel = state.filters.dailyRetentionChannel;
+      const rows = dailyRetentionRows.filter((row) => channel === "all" || row.channel === channel);
+      const headers = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D14", "D30", "M1", "M2"];
+      const body = rows.map((row) => `
+        <tr>
+          <td>${row.regDate}</td>
+          <td>${row.channel}</td>
+          <td>${row.system}</td>
+          <td>${row.registrations}</td>
+          ${row.retention.map((item) => `<td>${state.dailyRetentionTab === "count" ? item : formatPercent((item / row.registrations) * 100)}</td>`).join("")}
+        </tr>
+      `).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented outline">
+              <button class="seg-btn ${state.dailyRetentionTab === "count" ? "active" : ""}" data-action="set-daily-retention-tab" data-tab="count">分日留存数</button>
+              <button class="seg-btn ${state.dailyRetentionTab === "rate" ? "active" : ""}" data-action="set-daily-retention-tab" data-tab="rate">分日留存率</button>
+            </div>
+            <div class="form-group">
+              <label>渠道筛选：</label>
+              <select class="field" data-field="dailyRetentionChannel">${optionMarkup(channelOptions, channel)}</select>
+              <span class="chip">二级看板</span>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn ghost" data-action="switch-page" data-page="retention">返回用户留存表</button>
+            <button class="btn primary" data-action="query" data-scope="分日留存明细">查询</button>
+            <button class="btn primary" data-action="export" data-scope="分日留存明细">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>注册日期</th>
+                  <th>渠道</th>
+                  <th>系统</th>
+                  <th>注册用户</th>
+                  ${headers.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(62)}
+        </div>
+        <div class="note-strip">
+          本页为用户留存表点击“查看分日明细”后的二级看板，用于按注册日期查看 cohort 的分日留存数据。
+          当前补充节奏为 D1-D7、D14、D30，再衔接 M1、M2 月留存指标。
+        </div>
+      `;
+    }
+
+    function buildEditorDraft(mode, row) {
+      if (mode === "add") {
+        return {
+          id: null,
+          date: "2026-05-11",
+          system: "安卓",
+          channel: "google",
+          amount: "1000.00",
+          operatorId: 18,
+          operatorName: "演示用户"
+        };
+      }
+      return {
+        id: row.id,
+        date: normalizeDate(row.date),
+        system: row.system,
+        channel: row.channel,
+        amount: formatMoney(row.amount),
+        operatorId: row.operatorId,
+        operatorName: row.operatorName
+      };
+    }
+
+    function normalizeDate(value) {
+      const parts = value.split("-");
+      if (parts.length !== 3) return value;
+      const [year, month, day] = parts;
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+
+    function renderModal() {
+      const root = document.getElementById("modalRoot");
+      if (!state.modal) {
+        root.innerHTML = "";
+        return;
+      }
+
+      if (state.modal.type === "history") {
+        const row = state.adCostRows.find((item) => item.id === state.modal.id);
+        const body = row.history.map((item) => `
+          <tr>
+            <td>${item.type}</td>
+            <td>${item.date}</td>
+            <td class="${item.type === "编辑" ? "danger" : ""}">${formatMoney(item.amount)}</td>
+            <td>${item.operatorId}</td>
+            <td>${item.operatorName}</td>
+            <td>${item.opTime}</td>
+          </tr>
+        `).join("");
+        root.innerHTML = `
+          <div class="overlay">
+            <div class="modal">
+              <button class="modal-close" data-action="close-modal">×</button>
+              <h3 class="modal-title">操作记录</h3>
+              <div class="table-panel" style="box-shadow:none; border-radius:0; border:none;">
+                <div class="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>操作类型</th>
+                        <th>日期</th>
+                        <th>市场费</th>
+                        <th>操作用户id</th>
+                        <th>操作人</th>
+                        <th>操作时间</th>
+                      </tr>
+                    </thead>
+                    <tbody>${body}</tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button class="btn ghost" data-action="close-modal">取消</button>
+                <button class="btn primary" data-action="close-modal">确认</button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const draft = state.modal.draft;
+      const isAdd = state.modal.mode === "add";
+      root.innerHTML = `
+        <div class="overlay">
+          <div class="modal small">
+            <button class="modal-close" data-action="close-modal">×</button>
+            <h3 class="modal-title">${isAdd ? "新增广告费" : "编辑市场费"}</h3>
+            <div class="table-panel" style="box-shadow:none; border-radius:0; border:none;">
+              <div class="table-scroll">
+                <table class="editor-table" style="min-width: 780px;">
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>系统</th>
+                      <th>渠道</th>
+                      <th>市场费</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        ${isAdd
+                          ? `<input type="date" data-editor-field="date" value="${draft.date}">`
+                          : `<span class="muted">🕘 ${draft.date}</span>`}
+                      </td>
+                      <td>
+                        ${isAdd
+                          ? `<select data-editor-field="system">
+                               <option value="安卓" ${draft.system === "安卓" ? "selected" : ""}>安卓</option>
+                               <option value="iOS" ${draft.system === "iOS" ? "selected" : ""}>iOS</option>
+                             </select>`
+                          : `<span class="muted">${draft.system}</span>`}
+                      </td>
+                      <td>
+                        ${isAdd
+                          ? `<select data-editor-field="channel">
+                               <option value="google" ${draft.channel === "google" ? "selected" : ""}>google</option>
+                               <option value="facebook" ${draft.channel === "facebook" ? "selected" : ""}>facebook</option>
+                               <option value="ASA" ${draft.channel === "ASA" ? "selected" : ""}>ASA</option>
+                               <option value="organic" ${draft.channel === "organic" ? "selected" : ""}>organic</option>
+                             </select>`
+                          : `<span class="muted">${draft.channel}</span>`}
+                      </td>
+                      <td><input type="number" step="0.01" min="0" data-editor-field="amount" value="${draft.amount}"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button class="btn ghost" data-action="close-modal">取消</button>
+              <button class="btn primary" data-action="save-editor">${isAdd ? "新增" : "确认"}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderToast() {
+      const root = document.getElementById("toastRoot");
+      root.innerHTML = state.toast ? `<div class="toast">${state.toast}</div>` : "";
+    }
+
+    function renderPage() {
+      const root = document.getElementById("pageRoot");
+      const pages = {
+        retention: renderRetentionPage,
+        detail: renderDetailPage,
+        dailyRetentionDetail: renderDailyRetentionDetailPage,
+        renewal: renderRenewalPage,
+        adCost: renderAdCostPage,
+        roi: renderRoiPage
+      };
+      root.innerHTML = pages[state.page]();
+      document.getElementById("topTitle").textContent = pageTitle();
+    }
+
+    function render() {
+      renderNav();
+      renderPage();
+      renderModal();
+      renderToast();
+    }
+
+    function flash(message) {
+      state.toast = message;
+      renderToast();
+      window.clearTimeout(flash.timer);
+      flash.timer = window.setTimeout(() => {
+        state.toast = null;
+        renderToast();
+      }, 2200);
+    }
+
+    function openEditor(mode, id) {
+      const row = mode === "edit" ? state.adCostRows.find((item) => item.id === id) : null;
+      state.modal = {
+        type: "editor",
+        mode,
+        draft: buildEditorDraft(mode, row)
+      };
+      renderModal();
+    }
+
+    function closeModal() {
+      state.modal = null;
+      renderModal();
+    }
+
+    function nowString() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mi = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    }
+
+    function saveEditor() {
+      const draft = state.modal?.draft;
+      if (!draft) return;
+      const amount = Number(draft.amount);
+      if (!Number.isFinite(amount) || amount < 0) {
+        flash("市场费需为大于等于 0 的数字。");
+        return;
+      }
+
+      if (state.modal.mode === "add") {
+        const exists = state.adCostRows.some((row) =>
+          normalizeDate(row.date) === draft.date &&
+          row.system === draft.system &&
+          row.channel.toLowerCase() === String(draft.channel).toLowerCase()
+        );
+        if (exists) {
+          flash("相同日期、系统、渠道的记录已存在，请直接编辑历史记录。");
+          return;
+        }
+
+        const newId = Math.max(...state.adCostRows.map((row) => row.id)) + 1;
+        const timestamp = nowString();
+        state.adCostRows.unshift({
+          id: newId,
+          date: draft.date.replace(/-0/g, "-"),
+          system: draft.system,
+          channel: draft.channel,
+          amount,
+          operatorId: draft.operatorId,
+          operatorName: draft.operatorName,
+          opTime: timestamp,
+          history: [
+            {
+              type: "新增",
+              date: draft.date,
+              amount,
+              operatorId: draft.operatorId,
+              operatorName: draft.operatorName,
+              opTime: timestamp
+            }
+          ]
+        });
+        closeModal();
+        renderPage();
+        flash("新增广告费成功，ROI 看板成本源已同步刷新。");
+        return;
+      }
+
+      const row = state.adCostRows.find((item) => item.id === draft.id);
+      const timestamp = nowString();
+      row.amount = amount;
+      row.opTime = timestamp;
+      row.operatorId = draft.operatorId;
+      row.operatorName = draft.operatorName;
+      row.history.unshift({
+        type: "编辑",
+        date: draft.date,
+        amount,
+        operatorId: draft.operatorId,
+        operatorName: draft.operatorName,
+        opTime: timestamp
+      });
+      closeModal();
+      renderPage();
+      flash("市场费已更新，并生成一条操作记录。");
+    }
+
+    document.addEventListener("click", (event) => {
+      const actionNode = event.target.closest("[data-action]");
+      if (!actionNode) return;
+      const action = actionNode.dataset.action;
+
+      if (action === "switch-page") {
+        state.page = actionNode.dataset.page;
+        render();
+        return;
+      }
+
+      if (action === "set-retention-tab") {
+        state.retentionTab = actionNode.dataset.tab;
+        renderPage();
+        return;
+      }
+
+      if (action === "set-daily-retention-tab") {
+        state.dailyRetentionTab = actionNode.dataset.tab;
+        renderPage();
+        return;
+      }
+
+      if (action === "set-renewal-tab") {
+        state.renewalTab = actionNode.dataset.tab;
+        renderPage();
+        return;
+      }
+
+      if (action === "set-roi-tab") {
+        state.roiTab = actionNode.dataset.tab;
+        renderPage();
+        return;
+      }
+
+      if (action === "query") {
+        flash(`${actionNode.dataset.scope}已按当前筛选条件刷新。`);
+        return;
+      }
+
+      if (action === "export") {
+        flash(`原型演示：${actionNode.dataset.scope}将按当前筛选条件导出 Excel。`);
+        return;
+      }
+
+      if (action === "go-detail") {
+        state.filters.dailyRetentionChannel = state.filters.retentionChannel;
+        state.page = "dailyRetentionDetail";
+        render();
+        flash("已从用户留存表进入分日留存明细二级看板，并带入当前渠道筛选。");
+        return;
+      }
+
+      if (action === "import-excel") {
+        flash("原型演示：导入 Excel 将按模板校验后写入市场费记录。");
+        return;
+      }
+
+      if (action === "open-editor") {
+        openEditor(actionNode.dataset.mode, Number(actionNode.dataset.id));
+        return;
+      }
+
+      if (action === "open-history") {
+        state.modal = { type: "history", id: Number(actionNode.dataset.id) };
+        renderModal();
+        return;
+      }
+
+      if (action === "close-modal") {
+        closeModal();
+        return;
+      }
+
+      if (action === "save-editor") {
+        saveEditor();
+      }
+    });
+
+    document.addEventListener("change", (event) => {
+      if (event.target.matches("[data-field]")) {
+        state.filters[event.target.dataset.field] = event.target.value;
+        renderPage();
+        return;
+      }
+
+      if (event.target.matches("[data-editor-field]")) {
+        state.modal.draft[event.target.dataset.editorField] = event.target.value;
+      }
+    });
+
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("[data-editor-field]")) {
+        state.modal.draft[event.target.dataset.editorField] = event.target.value;
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
