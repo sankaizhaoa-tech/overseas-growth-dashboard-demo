@@ -621,6 +621,91 @@
       margin-left: 10px;
     }
 
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .summary-card {
+      background: linear-gradient(180deg, #ffffff, #f7faff);
+      border: 1px solid #dfe8f6;
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-label {
+      color: #7c8aa3;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .summary-value {
+      color: #253142;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin-bottom: 6px;
+    }
+
+    .summary-meta {
+      color: #8d99ac;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .inline-note {
+      color: #8793a5;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .boss-matrix th.sticky,
+    .boss-matrix td.sticky {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+    }
+
+    .boss-matrix thead th.sticky {
+      z-index: 4;
+      background: #edf3fb;
+    }
+
+    .boss-matrix tfoot td {
+      background: #f5f8fd;
+      font-weight: 700;
+      color: #4d5f79;
+    }
+
+    .heat-cell {
+      font-weight: 700;
+      color: #355b84;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .heat-cell:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 0 0 1px rgba(87, 153, 231, 0.4);
+    }
+
+    .toolbar-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .filter-hint {
+      color: #8a96a8;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
     .toast {
       position: fixed;
       right: 24px;
@@ -634,6 +719,14 @@
       min-width: 220px;
       max-width: 420px;
       line-height: 1.45;
+    }
+
+    .empty-row {
+      padding: 42px 18px !important;
+      text-align: center;
+      color: #8a96a8;
+      font-weight: 600;
+      background: #fbfcfe;
     }
 
     @media (max-width: 1480px) {
@@ -698,12 +791,36 @@
 
   <script>
     const menus = [
-      { id: "adCost", label: "广告费录入表", title: "广告费录入表" },
+      { id: "retention", label: "用户留存表", title: "用户留存表" },
       { id: "detail", label: "渠道明细表", title: "渠道明细表" },
-      { id: "roi", label: "ROI数据看板", title: "ROI数据看板" },
-      { id: "dailyRetentionDetail", label: "分日留存明细", title: "分日留存明细", hidden: true },
       { id: "renewal", label: "续费数据表", title: "续费数据表" },
-      { id: "retention", label: "用户留存表", title: "用户留存表" }
+      { id: "roi", label: "ROI数据看板", title: "ROI数据看板" },
+      { id: "adCost", label: "广告费录入表", title: "广告费录入表" },
+      { id: "dailyRetentionDetail", label: "分日留存明细", title: "分日留存明细", hidden: true }
+    ];
+
+    const membershipLevelOptions = [
+      { value: "all", label: "全部" },
+      { value: "free", label: "免费用户" },
+      { value: "vip", label: "VIP会员" },
+      { value: "premium", label: "高级会员" },
+      { value: "lifetime", label: "终身会员" }
+    ];
+
+    const vipSkuOptions = [
+      { value: "all", label: "全部" },
+      { value: "monthly", label: "monthly（月会员）" },
+      { value: "yearly", label: "yearly（年会员）" },
+      { value: "lifetime", label: "lifetime（终身会员）" }
+    ];
+
+    const countryOptions = [
+      { value: "all", label: "全部" },
+      { value: "美国", label: "美国" },
+      { value: "日本", label: "日本" },
+      { value: "韩国", label: "韩国" },
+      { value: "台湾", label: "台湾" },
+      { value: "英国", label: "英国" }
     ];
 
     const channelOptions = [
@@ -720,20 +837,104 @@
       { value: "iOS", label: "iOS" }
     ];
 
-    const vipOptions = [
-      { value: "all", label: "全部" },
-      { value: "monthly", label: "月会员" },
-      { value: "yearly", label: "年会员" },
-      { value: "lifetime", label: "终身会员" }
+    const vipOptions = vipSkuOptions;
+
+    const bossObservationDays = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 45];
+
+    const bossMetricConfig = {
+      roas: {
+        label: "ROAS",
+        description: "对应观察周期累计收入 / 市场费",
+        formatter: formatPercent,
+        heatDirection: "high"
+      },
+      ltv: {
+        label: "LTV",
+        description: "累计收入 / 注册用户数",
+        formatter: formatMoney,
+        heatDirection: "high"
+      },
+      retention: {
+        label: "留存",
+        description: "对应观察周期仍活跃用户 / 注册用户",
+        formatter: formatPercent,
+        heatDirection: "high"
+      },
+      payerCost: {
+        label: "付费用户成本",
+        description: "广告花费 / 累计付费用户数",
+        formatter: formatMoney,
+        heatDirection: "low"
+      },
+      renewalRate: {
+        label: "续费率",
+        description: "累计续费用户 / 累计付费用户",
+        formatter: formatPercent,
+        heatDirection: "high"
+      }
+    };
+
+    function buildBossHeatSeries(start, end, wiggle) {
+      const firstDay = bossObservationDays[0];
+      const lastDay = bossObservationDays[bossObservationDays.length - 1];
+      return bossObservationDays.map((day, index) => {
+        const ratio = (day - firstDay) / (lastDay - firstDay);
+        const curve = Math.pow(ratio, 0.82);
+        const value = start + ((end - start) * curve) + (((index % 3) - 1) * wiggle);
+        return Number(value.toFixed(2));
+      });
+    }
+
+    function trimBossSeries(series, visibleCount) {
+      return series.map((value, index) => index < visibleCount ? value : null);
+    }
+
+    function buildBossHeatMetricSet(roasSeries, ltvFactor, retentionOffset, renewalScale, payerBase) {
+      return {
+        roas: roasSeries,
+        ltv: roasSeries.map((value, index) => value == null ? null : Number(((value / 100) * ltvFactor + (index * 0.03)).toFixed(2))),
+        retention: roasSeries.map((value, index) => value == null ? null : Number(Math.max(18, Math.min(96, value - retentionOffset + (index * 0.42))).toFixed(2))),
+        renewalRate: roasSeries.map((value, index) => value == null ? null : Number(Math.max(0, Math.min(72, ((value - 32) * renewalScale) + Math.max(index - 2, 0) * 1.05)).toFixed(2))),
+        payerCost: roasSeries.map((value, index) => value == null ? null : Number(Math.max(12, payerBase - (value * 0.72) - (index * 1.25)).toFixed(2)))
+      };
+    }
+
+    const bossHeatmapRows = [
+      { cohortDate: "2026-02-01", channel: "google", country: "美国", system: "iOS", memberLevel: "vip", vipSku: "yearly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(43.90, 65.51, 0.85), 15), 1.16, 8.8, 0.44, 88) },
+      { cohortDate: "2026-02-02", channel: "facebook", country: "日本", system: "iOS", memberLevel: "premium", vipSku: "yearly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(63.10, 97.63, 1.10), 15), 1.28, 10.5, 0.51, 82) },
+      { cohortDate: "2026-02-03", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "monthly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(42.42, 73.35, 0.92), 15), 1.08, 9.4, 0.47, 90) },
+      { cohortDate: "2026-02-04", channel: "asa", country: "韩国", system: "iOS", memberLevel: "premium", vipSku: "yearly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(64.90, 95.21, 1.08), 15), 1.34, 10.8, 0.52, 79) },
+      { cohortDate: "2026-02-05", channel: "facebook", country: "英国", system: "安卓", memberLevel: "vip", vipSku: "monthly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(63.51, 98.05, 1.06), 15), 1.22, 11.1, 0.53, 80) },
+      { cohortDate: "2026-02-06", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "monthly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(56.86, 79.50, 0.88), 15), 1.03, 10.2, 0.42, 87) },
+      { cohortDate: "2026-02-07", channel: "organic", country: "台湾", system: "iOS", memberLevel: "free", vipSku: "monthly", visibleCount: 15, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(60.02, 90.64, 0.95), 15), 1.12, 10.4, 0.48, 84) },
+      { cohortDate: "2026-02-08", channel: "organic", country: "日本", system: "安卓", memberLevel: "free", vipSku: "monthly", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(61.79, 92.20, 0.90), 14), 1.14, 10.1, 0.49, 83) },
+      { cohortDate: "2026-02-09", channel: "google", country: "美国", system: "iOS", memberLevel: "vip", vipSku: "yearly", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(62.88, 93.40, 1.02), 14), 1.18, 10.6, 0.50, 81) },
+      { cohortDate: "2026-02-10", channel: "facebook", country: "英国", system: "iOS", memberLevel: "premium", vipSku: "yearly", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(66.10, 98.90, 1.12), 14), 1.31, 10.9, 0.54, 78) },
+      { cohortDate: "2026-02-11", channel: "asa", country: "韩国", system: "iOS", memberLevel: "vip", vipSku: "yearly", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(59.55, 88.10, 0.96), 14), 1.11, 10.0, 0.47, 85) },
+      { cohortDate: "2026-02-12", channel: "google", country: "日本", system: "安卓", memberLevel: "premium", vipSku: "lifetime", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(74.53, 101.70, 1.18), 14), 1.46, 11.8, 0.58, 74) },
+      { cohortDate: "2026-02-13", channel: "google", country: "美国", system: "iOS", memberLevel: "lifetime", vipSku: "lifetime", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(73.97, 102.90, 1.20), 14), 1.52, 12.2, 0.60, 72) },
+      { cohortDate: "2026-02-14", channel: "facebook", country: "日本", system: "安卓", memberLevel: "premium", vipSku: "yearly", visibleCount: 14, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(72.85, 95.60, 1.04), 14), 1.33, 11.3, 0.55, 76) },
+      { cohortDate: "2026-02-15", channel: "asa", country: "韩国", system: "iOS", memberLevel: "lifetime", vipSku: "lifetime", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(79.84, 104.90, 1.22), 13), 1.58, 12.8, 0.61, 69) },
+      { cohortDate: "2026-02-16", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "monthly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(64.78, 81.90, 0.82), 13), 1.04, 10.8, 0.45, 86) },
+      { cohortDate: "2026-02-17", channel: "facebook", country: "英国", system: "iOS", memberLevel: "lifetime", vipSku: "lifetime", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(78.74, 105.60, 1.24), 13), 1.61, 12.9, 0.63, 68) },
+      { cohortDate: "2026-02-18", channel: "google", country: "台湾", system: "安卓", memberLevel: "premium", vipSku: "yearly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(69.29, 88.50, 0.94), 13), 1.22, 11.0, 0.49, 79) },
+      { cohortDate: "2026-02-19", channel: "organic", country: "日本", system: "iOS", memberLevel: "free", vipSku: "monthly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(62.48, 79.30, 0.86), 13), 1.01, 10.2, 0.43, 87) },
+      { cohortDate: "2026-02-20", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "yearly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(68.42, 86.60, 0.92), 13), 1.20, 10.6, 0.48, 81) },
+      { cohortDate: "2026-02-21", channel: "facebook", country: "英国", system: "iOS", memberLevel: "vip", vipSku: "monthly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(64.62, 82.10, 0.84), 13), 1.07, 10.5, 0.44, 85) },
+      { cohortDate: "2026-02-22", channel: "asa", country: "韩国", system: "iOS", memberLevel: "vip", vipSku: "yearly", visibleCount: 13, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(64.13, 79.60, 0.82), 13), 1.10, 10.3, 0.44, 84) },
+      { cohortDate: "2026-02-23", channel: "organic", country: "台湾", system: "安卓", memberLevel: "free", vipSku: "monthly", visibleCount: 12, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(52.54, 68.10, 0.70), 12), 0.92, 9.2, 0.39, 92) },
+      { cohortDate: "2026-02-24", channel: "google", country: "美国", system: "iOS", memberLevel: "vip", vipSku: "monthly", visibleCount: 12, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(63.01, 79.90, 0.76), 12), 1.06, 10.1, 0.44, 86) },
+      { cohortDate: "2026-02-25", channel: "facebook", country: "日本", system: "安卓", memberLevel: "vip", vipSku: "monthly", visibleCount: 11, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(55.13, 70.30, 0.68), 11), 0.97, 9.8, 0.40, 90) },
+      { cohortDate: "2026-02-26", channel: "asa", country: "韩国", system: "iOS", memberLevel: "premium", vipSku: "lifetime", visibleCount: 10, metrics: buildBossHeatMetricSet(trimBossSeries(buildBossHeatSeries(59.89, 72.40, 0.62), 10), 1.04, 10.0, 0.41, 88) }
     ];
 
     const retentionRows = [
-      { month: "2024-06", channel: "google", activeUsers: 1000, regUsers: 1000, counts: [1000, 732, 618, 564, 505, 469, 430, 396, 364, 331, 309] },
-      { month: "2024-05", channel: "facebook", activeUsers: 888, regUsers: 888, counts: [888, 644, 551, 487, 443, 397, 362, 328, 302, 281, 268] },
-      { month: "2024-04", channel: "asa", activeUsers: 999, regUsers: 999, counts: [999, 702, 590, 536, 499, 468, 439, 412, 381, 357, 330] },
-      { month: "2024-03", channel: "google", activeUsers: 647, regUsers: 647, counts: [647, 472, 408, 357, 318, 287, 255, 236, 218, 199, 186] },
-      { month: "2024-02", channel: "organic", activeUsers: 1796, regUsers: 1796, counts: [1796, 1288, 1168, 1072, 978, 895, 810, 755, 689, 624, 590] },
-      { month: "2024-01", channel: "facebook", activeUsers: 6868, regUsers: 6868, counts: [6868, 5114, 4680, 4216, 3860, 3498, 3212, 2940, 2666, 2413, 2210] }
+      { month: "2024-06", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "yearly", activeUsers: 1000, regUsers: 1000, counts: [1000, 732, 618, 564, 505, 469, 430, 396, 364, 331, 309] },
+      { month: "2024-05", channel: "facebook", country: "日本", system: "iOS", memberLevel: "premium", vipSku: "yearly", activeUsers: 888, regUsers: 888, counts: [888, 644, 551, 487, 443, 397, 362, 328, 302, 281, 268] },
+      { month: "2024-04", channel: "asa", country: "韩国", system: "iOS", memberLevel: "premium", vipSku: "lifetime", activeUsers: 999, regUsers: 999, counts: [999, 702, 590, 536, 499, 468, 439, 412, 381, 357, 330] },
+      { month: "2024-03", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vipSku: "monthly", activeUsers: 647, regUsers: 647, counts: [647, 472, 408, 357, 318, 287, 255, 236, 218, 199, 186] },
+      { month: "2024-02", channel: "organic", country: "台湾", system: "iOS", memberLevel: "free", vipSku: "monthly", activeUsers: 1796, regUsers: 1796, counts: [1796, 1288, 1168, 1072, 978, 895, 810, 755, 689, 624, 590] },
+      { month: "2024-01", channel: "facebook", country: "英国", system: "iOS", memberLevel: "lifetime", vipSku: "lifetime", activeUsers: 6868, regUsers: 6868, counts: [6868, 5114, 4680, 4216, 3860, 3498, 3212, 2940, 2666, 2413, 2210] }
     ];
 
     retentionRows.forEach((row) => {
@@ -741,12 +942,12 @@
     });
 
     const renewalRows = [
-      { month: "2026-05", channel: "google", vip: "yearly", firstUsers: 990.29, firstAmount: 990.29, arppu: 990.29, ltv: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatOrders: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatAmount: [752, 803, 871, 884, 917, 944, 958, 1001, 1088, 1210, 1332, 1496, 1703] },
-      { month: "2026-04", channel: "facebook", vip: "monthly", firstUsers: 925.10, firstAmount: 925.10, arppu: 925.10, ltv: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatOrders: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatAmount: [688, 733, 801, 829, 865, 902, 935, 978, 1068, 1173, 1294, 1440, 1641] },
-      { month: "2026-03", channel: "asa", vip: "yearly", firstUsers: 1002.25, firstAmount: 1002.25, arppu: 1002.25, ltv: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatOrders: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatAmount: [744, 816, 892, 907, 948, 980, 1009, 1076, 1162, 1271, 1409, 1582, 1774] },
-      { month: "2026-02", channel: "google", vip: "monthly", firstUsers: 880.40, firstAmount: 880.40, arppu: 880.40, ltv: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatOrders: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatAmount: [645, 704, 763, 794, 833, 870, 905, 962, 1018, 1140, 1264, 1398, 1578] },
-      { month: "2026-01", channel: "organic", vip: "lifetime", firstUsers: 1110.00, firstAmount: 1110.00, arppu: 1110.00, ltv: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatOrders: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatAmount: [804, 863, 926, 948, 979, 1033, 1070, 1158, 1260, 1388, 1527, 1691, 1910] },
-      { month: "2025-12", channel: "facebook", vip: "yearly", firstUsers: 964.52, firstAmount: 964.52, arppu: 964.52, ltv: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatOrders: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatAmount: [712, 781, 843, 869, 904, 940, 968, 1030, 1118, 1230, 1354, 1517, 1730] }
+      { month: "2026-05", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vip: "yearly", firstUsers: 990.29, firstAmount: 990.29, arppu: 990.29, ltv: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatOrders: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], repeatAmount: [752, 803, 871, 884, 917, 944, 958, 1001, 1088, 1210, 1332, 1496, 1703] },
+      { month: "2026-04", channel: "facebook", country: "日本", system: "iOS", memberLevel: "vip", vip: "monthly", firstUsers: 925.10, firstAmount: 925.10, arppu: 925.10, ltv: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatOrders: [0.72, 0.79, 0.86, 0.87, 0.90, 0.91, 0.93, 0.98, 1.09, 1.19, 1.30, 1.46, 1.67], repeatAmount: [688, 733, 801, 829, 865, 902, 935, 978, 1068, 1173, 1294, 1440, 1641] },
+      { month: "2026-03", channel: "asa", country: "韩国", system: "iOS", memberLevel: "premium", vip: "yearly", firstUsers: 1002.25, firstAmount: 1002.25, arppu: 1002.25, ltv: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatOrders: [0.75, 0.82, 0.89, 0.90, 0.93, 0.95, 0.97, 1.04, 1.14, 1.24, 1.38, 1.55, 1.77], repeatAmount: [744, 816, 892, 907, 948, 980, 1009, 1076, 1162, 1271, 1409, 1582, 1774] },
+      { month: "2026-02", channel: "google", country: "美国", system: "安卓", memberLevel: "vip", vip: "monthly", firstUsers: 880.40, firstAmount: 880.40, arppu: 880.40, ltv: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatOrders: [0.70, 0.78, 0.84, 0.86, 0.88, 0.90, 0.92, 0.97, 1.04, 1.16, 1.27, 1.42, 1.61], repeatAmount: [645, 704, 763, 794, 833, 870, 905, 962, 1018, 1140, 1264, 1398, 1578] },
+      { month: "2026-01", channel: "organic", country: "台湾", system: "iOS", memberLevel: "lifetime", vip: "lifetime", firstUsers: 1110.00, firstAmount: 1110.00, arppu: 1110.00, ltv: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatOrders: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], repeatAmount: [804, 863, 926, 948, 979, 1033, 1070, 1158, 1260, 1388, 1527, 1691, 1910] },
+      { month: "2025-12", channel: "facebook", country: "英国", system: "iOS", memberLevel: "premium", vip: "yearly", firstUsers: 964.52, firstAmount: 964.52, arppu: 964.52, ltv: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatOrders: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatAmount: [712, 781, 843, 869, 904, 940, 968, 1030, 1118, 1230, 1354, 1517, 1730] }
     ];
 
     const roiRows = [
@@ -997,15 +1198,24 @@
 
     const state = {
       page: "retention",
+      bossView: "day",
+      bossMetric: "roas",
       retentionTab: "count",
       dailyRetentionTab: "count",
       renewalTab: "ltv",
       roiTab: "rate",
       filters: {
+        bossPlatform: "all",
+        bossChannelType: "all",
+        bossChannel: "all",
+        bossCountry: "all",
+        bossTimeType: "register",
+        bossUserType: "all",
         retentionChannel: "all",
         detailChannel: "all",
         detailSystem: "all",
         dailyRetentionChannel: "all",
+        dailyRetentionSystem: "all",
         renewalChannel: "all",
         renewalVip: "all",
         adChannel: "all",
@@ -1018,6 +1228,10 @@
 
     function optionMarkup(options, current) {
       return options.map((option) => `<option value="${option.value}" ${option.value === current ? "selected" : ""}>${option.label}</option>`).join("");
+    }
+
+    function emptyTableRow(colspan, message = "暂无符合当前筛选条件的数据") {
+      return `<tr><td colspan="${colspan}" class="empty-row">${message}</td></tr>`;
     }
 
     function formatNumber(value) {
@@ -1114,11 +1328,190 @@
       `;
     }
 
+    function formatBossMetric(metricKey, value) {
+      return bossMetricConfig[metricKey].formatter(value);
+    }
+
+    function currentBossRows() {
+      const rows = bossRows[state.bossView];
+      return rows.filter((row) => {
+        const platformMatch = state.filters.bossPlatform === "all" || row.platform === state.filters.bossPlatform;
+        const typeMatch = state.filters.bossChannelType === "all" || row.channelType === state.filters.bossChannelType;
+        const channelMatch = state.filters.bossChannel === "all" || row.channel.toLowerCase() === state.filters.bossChannel;
+        const countryMatch = state.filters.bossCountry === "all" || row.country === state.filters.bossCountry;
+        return platformMatch && typeMatch && channelMatch && countryMatch;
+      });
+    }
+
+    function lastValue(series) {
+      return series[series.length - 1];
+    }
+
+    function buildBossSummary(rows) {
+      const totals = rows.reduce((acc, row) => {
+        acc.spend += row.spend;
+        acc.regs += row.regs;
+        acc.revenue += lastValue(row.metrics.revenueSeries);
+        acc.active += lastValue(row.metrics.activeSeries);
+        acc.payers += lastValue(row.metrics.payerSeries);
+        acc.renewed += lastValue(row.metrics.renewalSeries);
+        return acc;
+      }, { spend: 0, regs: 0, revenue: 0, active: 0, payers: 0, renewed: 0 });
+
+      const metricValueMap = {
+        roas: totals.revenue / Math.max(totals.spend, 1),
+        ltv: totals.revenue / Math.max(totals.regs, 1),
+        retention: (totals.active / Math.max(totals.regs, 1)) * 100,
+        payRate: (totals.payers / Math.max(totals.regs, 1)) * 100,
+        payerCost: totals.spend / Math.max(totals.payers, 1),
+        renewalRate: (totals.renewed / Math.max(totals.payers, 1)) * 100
+      };
+
+      return {
+        totals,
+        currentMetric: metricValueMap[state.bossMetric]
+      };
+    }
+
+    function renderBossPage() {
+      const rows = currentBossRows();
+      const periods = bossViewHeaders[state.bossView];
+      const metric = state.bossMetric;
+      const summary = buildBossSummary(rows);
+      const body = rows.map((row) => `
+        <tr>
+          <td>${row.batch}</td>
+          <td>${row.platform}</td>
+          <td>${row.channelType}</td>
+          <td>${row.channel}</td>
+          <td>${row.country}</td>
+          <td>${formatMoney(row.spend)}</td>
+          <td>${formatNumber(row.regs)}</td>
+          <td>${formatMoney(lastValue(row.metrics.revenueSeries))}</td>
+          ${row.metrics[metric].map((value) => `<td>${formatBossMetric(metric, value)}</td>`).join("")}
+        </tr>
+      `).join("");
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented outline">
+              <button class="seg-btn ${state.bossView === "day" ? "active" : ""}" data-action="set-boss-view" data-view="day">By-Day</button>
+              <button class="seg-btn ${state.bossView === "month" ? "active" : ""}" data-action="set-boss-view" data-view="month">By-M</button>
+            </div>
+            <div class="segmented outline">
+              <button class="seg-btn ${metric === "roas" ? "active" : ""}" data-action="set-boss-metric" data-metric="roas">ROAS</button>
+              <button class="seg-btn ${metric === "ltv" ? "active" : ""}" data-action="set-boss-metric" data-metric="ltv">付费LTV</button>
+              <button class="seg-btn ${metric === "retention" ? "active" : ""}" data-action="set-boss-metric" data-metric="retention">留存</button>
+              <button class="seg-btn ${metric === "payRate" ? "active" : ""}" data-action="set-boss-metric" data-metric="payRate">付费率</button>
+              <button class="seg-btn ${metric === "payerCost" ? "active" : ""}" data-action="set-boss-metric" data-metric="payerCost">付费用户成本</button>
+              <button class="seg-btn ${metric === "renewalRate" ? "active" : ""}" data-action="set-boss-metric" data-metric="renewalRate">续费率</button>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <div class="inline-note">管理层总览矩阵：${bossMetricConfig[metric].description}</div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="form-group">
+              <label>数据端：</label>
+              <select class="field-inline" data-field="bossPlatform">${optionMarkup(bossPlatformOptions, state.filters.bossPlatform)}</select>
+            </div>
+            <div class="form-group">
+              <label>渠道类型：</label>
+              <select class="field-inline" data-field="bossChannelType">${optionMarkup(bossChannelTypeOptions, state.filters.bossChannelType)}</select>
+            </div>
+            <div class="form-group">
+              <label>渠道：</label>
+              <select class="field-inline" data-field="bossChannel">${optionMarkup(channelOptions, state.filters.bossChannel)}</select>
+            </div>
+            <div class="form-group">
+              <label>国家：</label>
+              <select class="field-inline" data-field="bossCountry">${optionMarkup(bossCountryOptions, state.filters.bossCountry)}</select>
+            </div>
+            <div class="form-group">
+              <label>时间类型：</label>
+              <select class="field-inline" data-field="bossTimeType">${optionMarkup(bossTimeTypeOptions, state.filters.bossTimeType)}</select>
+            </div>
+            <div class="form-group">
+              <label>用户类型：</label>
+              <select class="field-inline" data-field="bossUserType">${optionMarkup(bossUserTypeOptions, state.filters.bossUserType)}</select>
+            </div>
+            <div class="form-group">
+              <label>日期：</label>
+              <div class="date-range compact">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn primary" data-action="query" data-scope="Boss看板">查询</button>
+            <button class="btn secondary" data-action="async-export" data-scope="Boss看板">异步导出</button>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">累计市场费</div>
+            <div class="summary-value">$${formatMoney(summary.totals.spend)}</div>
+            <div class="summary-meta">当前筛选范围内所有注册 cohort 的总投放成本</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">累计注册用户</div>
+            <div class="summary-value">${formatNumber(summary.totals.regs)}</div>
+            <div class="summary-meta">业务账号注册数，按当前数据端与渠道筛选聚合</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">累计收入</div>
+            <div class="summary-value">$${formatMoney(summary.totals.revenue)}</div>
+            <div class="summary-meta">展示口径统一折算为美元，导出明细保留核算依据</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">当前核心指标</div>
+            <div class="summary-value">${formatBossMetric(metric, summary.currentMetric)}</div>
+            <div class="summary-meta">${bossMetricConfig[metric].label} · ${state.bossView === "day" ? "By-Day" : "By-M"} 视图</div>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">统计批次</th>
+                  <th rowspan="2">数据端</th>
+                  <th rowspan="2">渠道类型</th>
+                  <th rowspan="2">渠道</th>
+                  <th rowspan="2">国家</th>
+                  <th rowspan="2">市场费/$</th>
+                  <th rowspan="2">注册用户</th>
+                  <th rowspan="2">累计收入/$</th>
+                  <th colspan="${periods.length}">${bossMetricConfig[metric].label}${state.bossView === "day" ? "（按天）" : "（按月）"}</th>
+                </tr>
+                <tr>
+                  ${periods.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(state.bossView === "day" ? 128 : 46)}
+        </div>
+        <div class="note-strip">
+          本页结合 PC 端增长统计看板需求补充为管理层 Boss 视图，支持 By-Day 与 By-M 共存切换。
+          “异步导出”将创建后台任务，并按固定顺序输出 4 个 Sheet：筛选条件记录、计算口径说明、订单明细、聚合指标。
+          当前原型中国家、渠道类型等多选筛选以单选样式代替展示布局，正式版需接入 SOP 现有多选筛选组件。
+        </div>
+      `;
+    }
+
     function renderRetentionPage() {
       const channel = state.filters.retentionChannel;
       const rows = retentionRows.filter((row) => channel === "all" || row.channel === channel);
       const monthHeaders = Array.from({ length: 11 }, (_, index) => index === 0 ? "M0（当月）" : `M${index}`);
-      const body = rows.map((row) => {
+      const body = rows.length ? rows.map((row) => {
         const metrics = state.retentionTab === "count" ? row.counts : row.rates;
         return `
           <tr>
@@ -1128,7 +1521,7 @@
             ${metrics.map((value) => `<td>${value}</td>`).join("")}
           </tr>
         `;
-      }).join("");
+      }).join("") : emptyTableRow(14);
 
       return `
         <div class="toolbar">
@@ -1165,8 +1558,8 @@
           ${renderPagination(391)}
         </div>
         <div class="note-strip">
-          当前原型中“月留存数 / 月留存率”共用同一套月份 cohort 结构。
-          “查看分日明细”会进入本次新增的二级看板“分日留存明细”，用于查看分日注册用户的留存数据。
+          当前页中的注册用户口径为产品内业务账号，渠道维度来自 AF 归因结果回填。
+          “月留存数 / 月留存率”共用同一套业务注册 cohort 结构；“查看分日明细”会进入二级看板并继承当前渠道筛选。
         </div>
       `;
     }
@@ -1181,7 +1574,7 @@
         amount: { title: "周期复购-金额", headers: Array.from({ length: 13 }, (_, index) => `M${index}`), key: "repeatAmount", formatter: formatMoney }
       };
       const current = tabConfig[state.renewalTab];
-      const body = rows.map((row) => `
+      const body = rows.length ? rows.map((row) => `
         <tr>
           <td>${row.month}</td>
           <td>${formatMoney(row.firstUsers)}</td>
@@ -1189,7 +1582,7 @@
           <td>${formatMoney(row.arppu)}</td>
           ${row[current.key].map((value) => `<td>${current.formatter(value)}</td>`).join("")}
         </tr>
-      `).join("");
+      `).join("") : emptyTableRow(4 + current.headers.length);
 
       return `
         <div class="toolbar">
@@ -1233,13 +1626,17 @@
           </div>
           ${renderPagination(391)}
         </div>
+        <div class="note-strip">
+          续费数据表以内部订单 / 订阅收入为主源，渠道归因来自 AF 用户归因快照。
+          若后续接入 ROI360 Store Revenue，可将续费、退款、净收入事件作为增强校验来源。
+        </div>
       `;
     }
 
     function renderAdCostPage() {
       const channel = state.filters.adChannel;
       const rows = state.adCostRows.filter((row) => channel === "all" || row.channel.toLowerCase() === channel);
-      const body = rows.map((row) => `
+      const body = rows.length ? rows.map((row) => `
         <tr>
           <td>${row.date}</td>
           <td>${row.system}</td>
@@ -1250,7 +1647,7 @@
           <td class="linkish" data-action="open-history" data-id="${row.id}">${row.opTime}</td>
           <td class="text-link" data-action="open-editor" data-mode="edit" data-id="${row.id}">编辑</td>
         </tr>
-      `).join("");
+      `).join("") : emptyTableRow(8);
 
       return `
         <div class="toolbar" style="margin-bottom: 18px;">
@@ -1310,7 +1707,8 @@
           ${renderPagination(391)}
         </div>
         <div class="note-strip">
-          本页市场费统一按 <strong>$</strong> 展示与录入。若底层成本来源存在多币种，查询结果需按实时汇率折算为 <strong>$</strong> 后展示，并同步影响导出与 ROI 计算。
+          本页为 SO 后台的单一市场费来源，统一按 <strong>$</strong> 展示与录入。
+          若底层成本来源存在多币种，查询结果需按实时汇率折算为 <strong>$</strong> 后展示，并同步影响导出与 ROI 计算。
         </div>
       `;
     }
@@ -1364,7 +1762,7 @@
       };
       const current = tabConfig[state.roiTab];
       const metricHeaders = Array.from({ length: 13 }, (_, index) => `M${index}`);
-      const body = rows.map((row) => {
+      const body = rows.length ? rows.map((row) => {
         const leftValues = current.rowBuilder(row);
         const rightValues = current.series(row);
         return `
@@ -1373,7 +1771,7 @@
             ${rightValues.map((item) => `<td>${item}</td>`).join("")}
           </tr>
         `;
-      }).join("");
+      }).join("") : emptyTableRow(current.leftHeaders.length + metricHeaders.length);
 
       return `
         <div class="toolbar">
@@ -1411,7 +1809,8 @@
           ${renderPagination(391)}
         </div>
         <div class="note-strip">
-          ROI 页面中的市场费与收入金额统一按 <strong>$</strong> 展示。若原始订单或投放成本存在多币种，系统应在每次查询时按实时汇率折算为 <strong>$</strong> 后再参与累计计算。
+          ROI 页面中的市场费来自广告费录入表，注册与收入来自内部注册表和订单表，渠道维度来自 AF 归因结果。
+          页面中的市场费与收入金额统一按 <strong>$</strong> 展示；若原始订单或投放成本存在多币种，系统应在每次查询时按实时汇率折算为 <strong>$</strong> 后再参与累计计算。
         </div>
       `;
     }
@@ -1426,7 +1825,7 @@
       });
       const shortMetricSpan = detailShortStageConfigs.length * detailStageMetrics.length;
       const monthlyMetricSpan = detailMonthlyStageConfigs.length * detailStageMetrics.length;
-      const body = rows.map((row) => `
+      const body = rows.length ? rows.map((row) => `
         <tr>
           <td>${row.date}</td>
           <td>${row.system}</td>
@@ -1444,7 +1843,7 @@
           ${detailShortStageConfigs.map((config) => renderChannelStageCells(row.shortStages[config.key])).join("")}
           ${detailMonthlyStageConfigs.map((config) => renderChannelStageCells(row.monthlyStages[config.key])).join("")}
         </tr>
-      `).join("");
+      `).join("") : emptyTableRow(13 + shortMetricSpan + monthlyMetricSpan);
 
       return `
         <div class="toolbar">
@@ -1512,8 +1911,8 @@
           ${renderPagination(126)}
         </div>
         <div class="note-strip">
-          本页按“注册发生日期 + 系统 + 渠道”展示投放 cohort 转化宽表。D1-D7、D14、D30 为截至对应天结束时的累计付费转化；
-          “次月单月”表示注册次自然月内的单月付费表现；M1-M12 表示截至对应自然月月末的累计付费转化。
+          本页按“业务注册日期 + 系统 + 渠道”展示投放 cohort 转化宽表，注册用户为产品内业务账号，渠道归因来自 AF，市场费来自广告费录入表。
+          D1-D7、D14、D30 为截至对应天结束时的累计付费转化；“次月单月”表示注册次自然月内的单月付费表现；M1-M12 表示截至对应自然月月末的累计付费转化。
           市场费与收入统一按 <strong>$</strong> 展示，多币种按查询时实时汇率折算。
         </div>
       `;
@@ -1521,9 +1920,14 @@
 
     function renderDailyRetentionDetailPage() {
       const channel = state.filters.dailyRetentionChannel;
-      const rows = dailyRetentionRows.filter((row) => channel === "all" || row.channel === channel);
+      const system = state.filters.dailyRetentionSystem;
+      const rows = dailyRetentionRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel === channel;
+        const systemMatch = system === "all" || row.system === system;
+        return channelMatch && systemMatch;
+      });
       const headers = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D14", "D30", "M1", "M2"];
-      const body = rows.map((row) => `
+      const body = rows.length ? rows.map((row) => `
         <tr>
           <td>${row.regDate}</td>
           <td>${row.channel}</td>
@@ -1531,7 +1935,7 @@
           <td>${row.registrations}</td>
           ${row.retention.map((item) => `<td>${state.dailyRetentionTab === "count" ? item : formatPercent((item / row.registrations) * 100)}</td>`).join("")}
         </tr>
-      `).join("");
+      `).join("") : emptyTableRow(4 + headers.length);
 
       return `
         <div class="toolbar">
@@ -1543,8 +1947,21 @@
             <div class="form-group">
               <label>渠道筛选：</label>
               <select class="field" data-field="dailyRetentionChannel">${optionMarkup(channelOptions, channel)}</select>
-              <span class="chip">二级看板</span>
             </div>
+            <div class="form-group">
+              <label>系统：</label>
+              <select class="field" data-field="dailyRetentionSystem">${optionMarkup(systemOptions, system)}</select>
+            </div>
+            <div class="form-group">
+              <label>注册日期：</label>
+              <div class="date-range compact">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+            <span class="chip">二级看板</span>
           </div>
           <div class="toolbar-right">
             <button class="btn ghost" data-action="switch-page" data-page="retention">返回用户留存表</button>
@@ -1570,8 +1987,8 @@
           ${renderPagination(62)}
         </div>
         <div class="note-strip">
-          本页为用户留存表点击“查看分日明细”后的二级看板，用于按注册日期查看 cohort 的分日留存数据。
-          当前补充节奏为 D1-D7、D14、D30，再衔接 M1、M2 月留存指标。
+          本页为用户留存表点击“查看分日明细”后的二级看板，用于按业务注册日期查看 cohort 的分日留存数据，并继承来源页的渠道筛选条件。
+          当前原型展示 D1-D7、D14、D30、M1、M2 节点，用于表达前 30 天与跨月留存的混合观察方式。
         </div>
       `;
     }
@@ -1723,6 +2140,7 @@
     function renderPage() {
       const root = document.getElementById("pageRoot");
       const pages = {
+        boss: renderBossPage,
         retention: renderRetentionPage,
         detail: renderDetailPage,
         dailyRetentionDetail: renderDailyRetentionDetailPage,
@@ -1861,6 +2279,18 @@
         return;
       }
 
+      if (action === "set-boss-view") {
+        state.bossView = actionNode.dataset.view;
+        renderPage();
+        return;
+      }
+
+      if (action === "set-boss-metric") {
+        state.bossMetric = actionNode.dataset.metric;
+        renderPage();
+        return;
+      }
+
       if (action === "set-daily-retention-tab") {
         state.dailyRetentionTab = actionNode.dataset.tab;
         renderPage();
@@ -1886,6 +2316,11 @@
 
       if (action === "export") {
         flash(`原型演示：${actionNode.dataset.scope}将按当前筛选条件导出 Excel。`);
+        return;
+      }
+
+      if (action === "async-export") {
+        flash(`原型演示：${actionNode.dataset.scope}已创建后台导出任务 #BOSS-20260526-001，将输出 4 个固定 Sheet。`);
         return;
       }
 
