@@ -791,12 +791,14 @@
 
   <script>
     const menus = [
+      { id: "boss", label: "ROAS总览看板", title: "ROAS总览看板" },
       { id: "retention", label: "用户留存表", title: "用户留存表" },
       { id: "detail", label: "渠道明细表", title: "渠道明细表" },
       { id: "renewal", label: "续费数据表", title: "续费数据表" },
       { id: "roi", label: "ROI数据看板", title: "ROI数据看板" },
       { id: "adCost", label: "广告费录入表", title: "广告费录入表" },
-      { id: "dailyRetentionDetail", label: "分日留存明细", title: "分日留存明细", hidden: true }
+      { id: "dailyRetentionDetail", label: "分日留存明细", title: "分日留存明细", hidden: true },
+      { id: "dailyRenewalDetail", label: "分日续费明细", title: "分日续费明细", hidden: true }
     ];
 
     const membershipLevelOptions = [
@@ -839,7 +841,18 @@
 
     const vipOptions = vipSkuOptions;
 
-    const bossObservationDays = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 45];
+    const bossObservationPeriods = [
+      ...Array.from({ length: 31 }, (_, index) => ({
+        key: `D${index + 1}`,
+        label: `D${index + 1}`,
+        dayValue: index + 1
+      })),
+      ...Array.from({ length: 12 }, (_, index) => ({
+        key: `M${index + 1}`,
+        label: `M${index + 1}`,
+        dayValue: (index + 1) * 30
+      }))
+    ];
 
     const bossMetricConfig = {
       roas: {
@@ -875,10 +888,9 @@
     };
 
     function buildBossHeatSeries(start, end, wiggle) {
-      const firstDay = bossObservationDays[0];
-      const lastDay = bossObservationDays[bossObservationDays.length - 1];
-      return bossObservationDays.map((day, index) => {
-        const ratio = (day - firstDay) / (lastDay - firstDay);
+      const lastIndex = bossObservationPeriods.length - 1;
+      return bossObservationPeriods.map((period, index) => {
+        const ratio = index / lastIndex;
         const curve = Math.pow(ratio, 0.82);
         const value = start + ((end - start) * curve) + (((index % 3) - 1) * wiggle);
         return Number(value.toFixed(2));
@@ -886,7 +898,7 @@
     }
 
     function trimBossSeries(series, visibleCount) {
-      return series.map((value, index) => index < visibleCount ? value : null);
+      return series.map((value) => value);
     }
 
     function buildBossHeatMetricSet(roasSeries, ltvFactor, retentionOffset, renewalScale, payerBase) {
@@ -950,6 +962,23 @@
       { month: "2025-12", channel: "facebook", country: "英国", system: "iOS", memberLevel: "premium", vip: "yearly", firstUsers: 964.52, firstAmount: 964.52, arppu: 964.52, ltv: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatOrders: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], repeatAmount: [712, 781, 843, 869, 904, 940, 968, 1030, 1118, 1230, 1354, 1517, 1730] }
     ];
 
+    function buildDailyRenewalSeries(start, end, scale = 1) {
+      return Array.from({ length: 31 }, (_, index) => {
+        const ratio = index / 30;
+        const curve = Math.pow(ratio, 0.76);
+        const value = (start + ((end - start) * curve)) * scale;
+        return Number(value.toFixed(2));
+      });
+    }
+
+    const dailyRenewalRows = renewalRows.map((row, index) => ({
+      ...row,
+      firstPayDate: `2026-05-${String(index + 1).padStart(2, "0")}`,
+      dailyLtv: buildDailyRenewalSeries(row.ltv[0] * 0.56, row.ltv[4], 1),
+      dailyOrders: buildDailyRenewalSeries(row.repeatOrders[0] * 0.50, row.repeatOrders[4], 1),
+      dailyAmount: buildDailyRenewalSeries(row.repeatAmount[0] * 0.18, row.repeatAmount[4], 1)
+    }));
+
     const roiRows = [
       { month: "2026-05", channel: "google", marketCost: 990.29, regs: 1000, cumulativeUsers: 233, cumulativeRevenue: 9810.23, cumulativeOrders: 418, paySeries: [23.30, 25.80, 27.60, 29.40, 30.80, 31.60, 32.20, 33.10, 34.20, 35.80, 37.10, 38.80, 40.50], roiSeries: [0.76, 0.81, 0.88, 0.88, 0.91, 0.92, 0.93, 1.00, 1.10, 1.22, 1.34, 1.51, 1.72], orderSeries: [0.42, 0.47, 0.52, 0.57, 0.61, 0.66, 0.69, 0.73, 0.77, 0.82, 0.89, 0.95, 1.03] },
       { month: "2026-04", channel: "facebook", marketCost: 925.10, regs: 963, cumulativeUsers: 214, cumulativeRevenue: 8940.20, cumulativeOrders: 396, paySeries: [22.22, 24.77, 26.30, 27.94, 29.31, 30.22, 31.15, 32.28, 33.85, 35.20, 36.68, 38.11, 39.46], roiSeries: [0.71, 0.79, 0.85, 0.86, 0.89, 0.90, 0.92, 0.97, 1.08, 1.20, 1.31, 1.46, 1.65], orderSeries: [0.40, 0.44, 0.48, 0.53, 0.57, 0.60, 0.64, 0.68, 0.72, 0.77, 0.83, 0.89, 0.97] },
@@ -958,6 +987,13 @@
       { month: "2026-01", channel: "organic", marketCost: 1110.00, regs: 1130, cumulativeUsers: 287, cumulativeRevenue: 11804.10, cumulativeOrders: 508, paySeries: [25.40, 27.21, 29.02, 30.57, 31.89, 33.10, 34.34, 35.93, 37.54, 39.11, 41.22, 43.18, 45.66], roiSeries: [0.83, 0.89, 0.95, 0.96, 0.98, 1.02, 1.05, 1.13, 1.24, 1.37, 1.52, 1.69, 1.92], orderSeries: [0.45, 0.49, 0.54, 0.59, 0.63, 0.67, 0.71, 0.77, 0.82, 0.89, 0.95, 1.02, 1.11] },
       { month: "2025-12", channel: "facebook", marketCost: 964.52, regs: 988, cumulativeUsers: 226, cumulativeRevenue: 9325.40, cumulativeOrders: 401, paySeries: [22.87, 24.31, 26.08, 27.36, 28.74, 29.77, 30.62, 32.01, 33.57, 34.92, 36.42, 37.95, 39.58], roiSeries: [0.74, 0.80, 0.87, 0.88, 0.90, 0.92, 0.94, 1.01, 1.10, 1.21, 1.35, 1.51, 1.73], orderSeries: [0.40, 0.43, 0.48, 0.51, 0.56, 0.59, 0.63, 0.68, 0.73, 0.79, 0.85, 0.91, 0.99] }
     ];
+
+    roiRows.forEach((row) => {
+      row.country = row.channel === "asa" ? "韩国" : row.channel === "facebook" ? "日本" : row.channel === "organic" ? "台湾" : "美国";
+      row.system = row.channel === "google" ? "安卓" : "iOS";
+      row.memberLevel = row.channel === "organic" ? "lifetime" : row.channel === "asa" ? "premium" : "vip";
+      row.vipSku = row.memberLevel === "lifetime" ? "lifetime" : row.system === "iOS" ? "yearly" : "monthly";
+    });
 
     const adCostRowsSeed = [
       {
@@ -1041,6 +1077,12 @@
         ]
       }
     ];
+
+    adCostRowsSeed.forEach((row) => {
+      row.country = row.channel === "ASA" ? "韩国" : row.channel === "facebook" ? "日本" : "美国";
+      row.memberLevel = row.channel === "facebook" ? "premium" : "vip";
+      row.vipSku = row.system === "iOS" ? "yearly" : "monthly";
+    });
 
     const detailStageMetrics = [
       { key: "revenue", label: "付费金额/$", formatter: formatMoney },
@@ -1180,6 +1222,9 @@
 
       return {
         ...row,
+        country: row.channel === "ASA" ? "韩国" : row.channel === "facebook" ? "日本" : "美国",
+        memberLevel: row.channel === "facebook" ? "premium" : "vip",
+        vipSku: row.system === "iOS" ? "yearly" : "monthly",
         regCost: row.marketCost / row.regs,
         regRate: (row.regs / row.activations) * 100,
         activationCost: row.marketCost / row.activations,
@@ -1196,12 +1241,19 @@
       { regDate: "2024-06-05", channel: "google", system: "安卓", registrations: 301, retention: [218, 194, 181, 169, 159, 151, 146, 132, 118, 94, 75] }
     ];
 
+    dailyRetentionRows.forEach((row) => {
+      row.country = row.channel === "ASA" ? "韩国" : row.channel === "facebook" ? "日本" : "美国";
+      row.memberLevel = row.channel === "facebook" ? "premium" : "vip";
+      row.vipSku = row.system === "iOS" ? "yearly" : "monthly";
+    });
+
     const state = {
-      page: "retention",
+      page: "boss",
       bossView: "day",
       bossMetric: "roas",
       retentionTab: "count",
       dailyRetentionTab: "count",
+      dailyRenewalTab: "ltv",
       renewalTab: "ltv",
       roiTab: "rate",
       filters: {
@@ -1211,15 +1263,40 @@
         bossCountry: "all",
         bossTimeType: "register",
         bossUserType: "all",
+        bossMedia: "all",
+        bossSystem: "all",
+        bossMemberLevel: "all",
+        bossVipSku: "all",
         retentionChannel: "all",
+        retentionCountry: "all",
+        retentionSystem: "all",
+        retentionMemberLevel: "all",
+        retentionVipSku: "all",
         detailChannel: "all",
         detailSystem: "all",
+        detailCountry: "all",
+        detailMemberLevel: "all",
+        detailVipSku: "all",
         dailyRetentionChannel: "all",
         dailyRetentionSystem: "all",
+        dailyRetentionCountry: "all",
+        dailyRetentionMemberLevel: "all",
+        dailyRetentionVipSku: "all",
         renewalChannel: "all",
         renewalVip: "all",
+        renewalCountry: "all",
+        renewalSystem: "all",
+        renewalMemberLevel: "all",
         adChannel: "all",
-        roiChannel: "all"
+        adCountry: "all",
+        adSystem: "all",
+        adMemberLevel: "all",
+        adVipSku: "all",
+        roiChannel: "all",
+        roiCountry: "all",
+        roiSystem: "all",
+        roiMemberLevel: "all",
+        roiVipSku: "all"
       },
       adCostRows: JSON.parse(JSON.stringify(adCostRowsSeed)),
       modal: null,
@@ -1332,196 +1409,277 @@
       return bossMetricConfig[metricKey].formatter(value);
     }
 
+    const bossMediaOptions = [
+      { value: "all", label: "全部渠道" },
+      { value: "google", label: "Google Ads" },
+      { value: "facebook", label: "Meta" },
+      { value: "asa", label: "ASA" },
+      { value: "organic", label: "Organic" }
+    ];
+
     function currentBossRows() {
-      const rows = bossRows[state.bossView];
-      return rows.filter((row) => {
-        const platformMatch = state.filters.bossPlatform === "all" || row.platform === state.filters.bossPlatform;
-        const typeMatch = state.filters.bossChannelType === "all" || row.channelType === state.filters.bossChannelType;
-        const channelMatch = state.filters.bossChannel === "all" || row.channel.toLowerCase() === state.filters.bossChannel;
+      return bossHeatmapRows.filter((row) => {
+        const mediaMatch = state.filters.bossMedia === "all" || row.channel === state.filters.bossMedia;
         const countryMatch = state.filters.bossCountry === "all" || row.country === state.filters.bossCountry;
-        return platformMatch && typeMatch && channelMatch && countryMatch;
+        const systemMatch = state.filters.bossSystem === "all" || row.system === state.filters.bossSystem;
+        const memberMatch = state.filters.bossMemberLevel === "all" || row.memberLevel === state.filters.bossMemberLevel;
+        const vipMatch = state.filters.bossVipSku === "all" || row.vipSku === state.filters.bossVipSku;
+        return mediaMatch && countryMatch && systemMatch && memberMatch && vipMatch;
       });
     }
 
+    function renderGrowthFilters(config) {
+      const {
+        channelField,
+        channelValue,
+        countryField,
+        countryValue,
+        systemField,
+        systemValue,
+        memberField,
+        memberValue,
+        vipField,
+        vipValue,
+        channelOptionsSource = channelOptions
+      } = config;
+
+      return `
+        <div class="form-group">
+          <label>会员等级：</label>
+          <select class="field-inline" data-field="${memberField}">${optionMarkup(membershipLevelOptions, memberValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>VIP类型：</label>
+          <select class="field-inline" data-field="${vipField}">${optionMarkup(vipSkuOptions, vipValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>国家：</label>
+          <select class="field-inline" data-field="${countryField}">${optionMarkup(countryOptions, countryValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>端口：</label>
+          <select class="field-inline" data-field="${systemField}">${optionMarkup(systemOptions, systemValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>渠道：</label>
+          <select class="field-inline" data-field="${channelField}">${optionMarkup(channelOptionsSource, channelValue)}</select>
+        </div>
+      `;
+    }
+
+    function renderSourceFilters(config) {
+      const {
+        channelField,
+        channelValue,
+        countryField,
+        countryValue,
+        systemField,
+        systemValue
+      } = config;
+
+      return `
+        <div class="form-group">
+          <label>来源国家：</label>
+          <select class="field-inline" data-field="${countryField}">${optionMarkup(countryOptions, countryValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>来源端口：</label>
+          <select class="field-inline" data-field="${systemField}">${optionMarkup(systemOptions, systemValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>来源渠道：</label>
+          <select class="field-inline" data-field="${channelField}">${optionMarkup(channelOptions, channelValue)}</select>
+        </div>
+      `;
+    }
+
+    function renderPortChannelFilters(config) {
+      const {
+        channelField,
+        channelValue,
+        systemField,
+        systemValue
+      } = config;
+
+      return `
+        <div class="form-group">
+          <label>端口：</label>
+          <select class="field-inline" data-field="${systemField}">${optionMarkup(systemOptions, systemValue)}</select>
+        </div>
+        <div class="form-group">
+          <label>渠道：</label>
+          <select class="field-inline" data-field="${channelField}">${optionMarkup(channelOptions, channelValue)}</select>
+        </div>
+      `;
+    }
+
     function lastValue(series) {
-      return series[series.length - 1];
+      const available = series.filter((value) => value != null);
+      return available[available.length - 1] || 0;
+    }
+
+    function averageMetric(rows, metric, dayIndex = null) {
+      const values = rows.map((row) => {
+        if (dayIndex == null) return lastValue(row.metrics[metric]);
+        return row.metrics[metric][dayIndex];
+      }).filter((value) => value != null);
+      if (!values.length) return 0;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function heatCellStyle(value, metric) {
+      if (value == null) return "";
+      const direction = bossMetricConfig[metric].heatDirection;
+      const ranges = {
+        roas: [40, 105],
+        ltv: [0.4, 1.9],
+        retention: [35, 95],
+        renewalRate: [5, 45],
+        payerCost: [15, 60]
+      };
+      const [min, max] = ranges[metric] || [0, 100];
+      const normalized = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      const intensity = direction === "low" ? 1 - normalized : normalized;
+      const alpha = 0.16 + intensity * 0.56;
+      return `style="background: rgba(80, 184, 232, ${alpha.toFixed(2)});"`;
     }
 
     function buildBossSummary(rows) {
-      const totals = rows.reduce((acc, row) => {
-        acc.spend += row.spend;
-        acc.regs += row.regs;
-        acc.revenue += lastValue(row.metrics.revenueSeries);
-        acc.active += lastValue(row.metrics.activeSeries);
-        acc.payers += lastValue(row.metrics.payerSeries);
-        acc.renewed += lastValue(row.metrics.renewalSeries);
-        return acc;
-      }, { spend: 0, regs: 0, revenue: 0, active: 0, payers: 0, renewed: 0 });
-
-      const metricValueMap = {
-        roas: totals.revenue / Math.max(totals.spend, 1),
-        ltv: totals.revenue / Math.max(totals.regs, 1),
-        retention: (totals.active / Math.max(totals.regs, 1)) * 100,
-        payRate: (totals.payers / Math.max(totals.regs, 1)) * 100,
-        payerCost: totals.spend / Math.max(totals.payers, 1),
-        renewalRate: (totals.renewed / Math.max(totals.payers, 1)) * 100
-      };
-
+      const day31Index = bossObservationPeriods.findIndex((period) => period.key === "D31");
+      const month12Index = bossObservationPeriods.findIndex((period) => period.key === "M12");
+      const metric = state.bossMetric;
+      const bestRow = rows.reduce((best, row) => lastValue(row.metrics.roas) > lastValue(best.metrics.roas) ? row : best, rows[0] || bossHeatmapRows[0]);
       return {
-        totals,
-        currentMetric: metricValueMap[state.bossMetric]
+        cohortCount: rows.length,
+        day31: averageMetric(rows, metric, day31Index),
+        month12: averageMetric(rows, metric, month12Index),
+        current: averageMetric(rows, metric),
+        bestDate: bestRow.cohortDate,
+        bestRoas: lastValue(bestRow.metrics.roas)
       };
     }
 
     function renderBossPage() {
       const rows = currentBossRows();
-      const periods = bossViewHeaders[state.bossView];
+      const selectedPeriodEntries = bossObservationPeriods
+        .map((period, index) => ({ period, index }))
+        .filter((entry) => state.bossView === "day" ? entry.period.key.startsWith("D") : entry.period.key.startsWith("M"));
+      const periods = selectedPeriodEntries.map((entry) => entry.period.label);
       const metric = state.bossMetric;
-      const summary = buildBossSummary(rows);
+      const averageRow = selectedPeriodEntries.map((entry) => {
+        const value = averageMetric(rows, metric, entry.index);
+        return `<td class="heat-cell" ${heatCellStyle(value, metric)}>${value ? formatBossMetric(metric, value) : "-"}</td>`;
+      }).join("");
       const body = rows.map((row) => `
         <tr>
-          <td>${row.batch}</td>
-          <td>${row.platform}</td>
-          <td>${row.channelType}</td>
-          <td>${row.channel}</td>
-          <td>${row.country}</td>
-          <td>${formatMoney(row.spend)}</td>
-          <td>${formatNumber(row.regs)}</td>
-          <td>${formatMoney(lastValue(row.metrics.revenueSeries))}</td>
-          ${row.metrics[metric].map((value) => `<td>${formatBossMetric(metric, value)}</td>`).join("")}
+          <td class="sticky linkish">${row.cohortDate}</td>
+          ${selectedPeriodEntries.map((entry) => {
+            const value = row.metrics[metric][entry.index];
+            return value == null
+              ? `<td class="muted">-</td>`
+              : `<td class="heat-cell" ${heatCellStyle(value, metric)}>${formatBossMetric(metric, value)}</td>`;
+          }).join("")}
         </tr>
       `).join("");
 
       return `
-        <div class="toolbar">
+        <div class="toolbar-stack">
           <div class="toolbar-left">
             <div class="segmented outline">
-              <button class="seg-btn ${state.bossView === "day" ? "active" : ""}" data-action="set-boss-view" data-view="day">By-Day</button>
-              <button class="seg-btn ${state.bossView === "month" ? "active" : ""}" data-action="set-boss-view" data-view="month">By-M</button>
+              <button class="seg-btn ${state.bossView === "day" ? "active" : ""}" data-action="set-boss-view" data-view="day">By-day</button>
+              <button class="seg-btn ${state.bossView === "month" ? "active" : ""}" data-action="set-boss-view" data-view="month">By-Month</button>
             </div>
             <div class="segmented outline">
               <button class="seg-btn ${metric === "roas" ? "active" : ""}" data-action="set-boss-metric" data-metric="roas">ROAS</button>
               <button class="seg-btn ${metric === "ltv" ? "active" : ""}" data-action="set-boss-metric" data-metric="ltv">付费LTV</button>
               <button class="seg-btn ${metric === "retention" ? "active" : ""}" data-action="set-boss-metric" data-metric="retention">留存</button>
-              <button class="seg-btn ${metric === "payRate" ? "active" : ""}" data-action="set-boss-metric" data-metric="payRate">付费率</button>
-              <button class="seg-btn ${metric === "payerCost" ? "active" : ""}" data-action="set-boss-metric" data-metric="payerCost">付费用户成本</button>
               <button class="seg-btn ${metric === "renewalRate" ? "active" : ""}" data-action="set-boss-metric" data-metric="renewalRate">续费率</button>
+              <button class="seg-btn ${metric === "payerCost" ? "active" : ""}" data-action="set-boss-metric" data-metric="payerCost">付费用户成本</button>
             </div>
           </div>
-          <div class="toolbar-right">
-            <div class="inline-note">管理层总览矩阵：${bossMetricConfig[metric].description}</div>
-          </div>
-        </div>
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <div class="form-group">
-              <label>数据端：</label>
-              <select class="field-inline" data-field="bossPlatform">${optionMarkup(bossPlatformOptions, state.filters.bossPlatform)}</select>
-            </div>
-            <div class="form-group">
-              <label>渠道类型：</label>
-              <select class="field-inline" data-field="bossChannelType">${optionMarkup(bossChannelTypeOptions, state.filters.bossChannelType)}</select>
-            </div>
-            <div class="form-group">
-              <label>渠道：</label>
-              <select class="field-inline" data-field="bossChannel">${optionMarkup(channelOptions, state.filters.bossChannel)}</select>
-            </div>
-            <div class="form-group">
-              <label>国家：</label>
-              <select class="field-inline" data-field="bossCountry">${optionMarkup(bossCountryOptions, state.filters.bossCountry)}</select>
-            </div>
-            <div class="form-group">
-              <label>时间类型：</label>
-              <select class="field-inline" data-field="bossTimeType">${optionMarkup(bossTimeTypeOptions, state.filters.bossTimeType)}</select>
-            </div>
-            <div class="form-group">
-              <label>用户类型：</label>
-              <select class="field-inline" data-field="bossUserType">${optionMarkup(bossUserTypeOptions, state.filters.bossUserType)}</select>
-            </div>
-            <div class="form-group">
-              <label>日期：</label>
-              <div class="date-range compact">
-                <span class="date-icon">🕘</span>
-                <input class="date-field" placeholder="开始时间" readonly>
-                <span class="divider">-</span>
-                <input class="date-field" placeholder="截止时间" readonly>
+          <div class="toolbar">
+            <div class="toolbar-left">
+              ${renderGrowthFilters({
+                channelField: "bossMedia",
+                channelValue: state.filters.bossMedia,
+                countryField: "bossCountry",
+                countryValue: state.filters.bossCountry,
+                systemField: "bossSystem",
+                systemValue: state.filters.bossSystem,
+                memberField: "bossMemberLevel",
+                memberValue: state.filters.bossMemberLevel,
+                vipField: "bossVipSku",
+                vipValue: state.filters.bossVipSku,
+                channelOptionsSource: bossMediaOptions
+              })}
+              <div class="form-group">
+                <label>日期：</label>
+                <div class="date-range compact">
+                  <input class="date-field" value="2026-02-01" readonly>
+                  <span class="divider">-</span>
+                  <input class="date-field" value="2026-04-30" readonly>
+                  <span class="date-icon">▣</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="toolbar-right">
-            <button class="btn primary" data-action="query" data-scope="Boss看板">查询</button>
-            <button class="btn secondary" data-action="async-export" data-scope="Boss看板">异步导出</button>
-          </div>
-        </div>
-        <div class="summary-grid">
-          <div class="summary-card">
-            <div class="summary-label">累计市场费</div>
-            <div class="summary-value">$${formatMoney(summary.totals.spend)}</div>
-            <div class="summary-meta">当前筛选范围内所有注册 cohort 的总投放成本</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">累计注册用户</div>
-            <div class="summary-value">${formatNumber(summary.totals.regs)}</div>
-            <div class="summary-meta">业务账号注册数，按当前数据端与渠道筛选聚合</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">累计收入</div>
-            <div class="summary-value">$${formatMoney(summary.totals.revenue)}</div>
-            <div class="summary-meta">展示口径统一折算为美元，导出明细保留核算依据</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-label">当前核心指标</div>
-            <div class="summary-value">${formatBossMetric(metric, summary.currentMetric)}</div>
-            <div class="summary-meta">${bossMetricConfig[metric].label} · ${state.bossView === "day" ? "By-Day" : "By-M"} 视图</div>
+            <div class="toolbar-right">
+              <button class="btn primary" data-action="query" data-scope="ROAS总览看板">查询</button>
+              <button class="btn secondary" data-action="async-export" data-scope="ROAS总览看板">导出</button>
+            </div>
           </div>
         </div>
         <div class="table-panel">
           <div class="table-scroll">
-            <table>
+            <table class="boss-matrix">
               <thead>
                 <tr>
-                  <th rowspan="2">统计批次</th>
-                  <th rowspan="2">数据端</th>
-                  <th rowspan="2">渠道类型</th>
-                  <th rowspan="2">渠道</th>
-                  <th rowspan="2">国家</th>
-                  <th rowspan="2">市场费/$</th>
-                  <th rowspan="2">注册用户</th>
-                  <th rowspan="2">累计收入/$</th>
-                  <th colspan="${periods.length}">${bossMetricConfig[metric].label}${state.bossView === "day" ? "（按天）" : "（按月）"}</th>
-                </tr>
-                <tr>
+                  <th class="sticky">激活日期</th>
                   ${periods.map((item) => `<th>${item}</th>`).join("")}
                 </tr>
               </thead>
-              <tbody>${body}</tbody>
+              <tbody>${body || emptyTableRow(periods.length + 1)}</tbody>
+              <tfoot>
+                <tr>
+                  <td class="sticky">汇总均值</td>
+                  ${averageRow}
+                </tr>
+              </tfoot>
             </table>
           </div>
-          ${renderPagination(state.bossView === "day" ? 128 : 46)}
         </div>
         <div class="note-strip">
-          本页结合 PC 端增长统计看板需求补充为管理层 Boss 视图，支持 By-Day 与 By-M 共存切换。
-          “异步导出”将创建后台任务，并按固定顺序输出 4 个 Sheet：筛选条件记录、计算口径说明、订单明细、聚合指标。
-          当前原型中国家、渠道类型等多选筛选以单选样式代替展示布局，正式版需接入 SOP 现有多选筛选组件。
+          ROAS = 对应激活批次在观察周期内的累计美元收入 / 该批次广告花费；D1-D31 按注册后自然日累计，M1-M12 按注册后自然月累计。
+          本总览沿用热力表结构，以“激活日期 × D/M观察周期”定位高回收/低回收批次，空值表示该批次尚未跑满对应观察周期。
+          导出需包含筛选条件记录、计算口径说明、订单明细、聚合指标 4 个 Sheet，便于增长侧复核。
         </div>
       `;
     }
 
     function renderRetentionPage() {
       const channel = state.filters.retentionChannel;
-      const rows = retentionRows.filter((row) => channel === "all" || row.channel === channel);
+      const country = state.filters.retentionCountry;
+      const system = state.filters.retentionSystem;
+      const rows = retentionRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel === channel;
+        const countryMatch = country === "all" || row.country === country;
+        const systemMatch = system === "all" || row.system === system;
+        return channelMatch && countryMatch && systemMatch;
+      });
       const monthHeaders = Array.from({ length: 11 }, (_, index) => index === 0 ? "M0（当月）" : `M${index}`);
       const body = rows.length ? rows.map((row) => {
         const metrics = state.retentionTab === "count" ? row.counts : row.rates;
         return `
           <tr>
             <td>${row.month}</td>
+            <td>${row.country}</td>
+            <td>${row.system}</td>
+            <td>${row.channel}</td>
             <td>${row.activeUsers}</td>
             <td>${row.regUsers}</td>
             ${metrics.map((value) => `<td>${value}</td>`).join("")}
           </tr>
         `;
-      }).join("") : emptyTableRow(14);
+      }).join("") : emptyTableRow(16);
 
       return `
         <div class="toolbar">
@@ -1532,10 +1690,14 @@
             </div>
           </div>
           <div class="toolbar-right">
-            <div class="form-group">
-              <label>渠道筛选：</label>
-              <select class="field" data-field="retentionChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
+            ${renderSourceFilters({
+              channelField: "retentionChannel",
+              channelValue: channel,
+              countryField: "retentionCountry",
+              countryValue: country,
+              systemField: "retentionSystem",
+              systemValue: system
+            })}
             <button class="btn primary" data-action="query" data-scope="用户留存表">查询</button>
             <button class="btn primary" data-action="export" data-scope="用户留存表">导出</button>
             <button class="btn primary" data-action="go-detail">查看分日明细</button>
@@ -1547,6 +1709,9 @@
               <thead>
                 <tr>
                   <th>日期</th>
+                  <th>来源国家</th>
+                  <th>来源端口</th>
+                  <th>来源渠道</th>
                   <th>月活跃用户</th>
                   <th>注册用户</th>
                   ${monthHeaders.map((item) => `<th>${item}</th>`).join("")}
@@ -1567,7 +1732,17 @@
     function renderRenewalPage() {
       const channel = state.filters.renewalChannel;
       const vip = state.filters.renewalVip;
-      const rows = renewalRows.filter((row) => (channel === "all" || row.channel === channel) && (vip === "all" || row.vip === vip));
+      const country = state.filters.renewalCountry;
+      const system = state.filters.renewalSystem;
+      const memberLevel = state.filters.renewalMemberLevel;
+      const rows = renewalRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel === channel;
+        const vipMatch = vip === "all" || row.vip === vip;
+        const countryMatch = country === "all" || row.country === country;
+        const systemMatch = system === "all" || row.system === system;
+        const memberMatch = memberLevel === "all" || row.memberLevel === memberLevel;
+        return channelMatch && vipMatch && countryMatch && systemMatch && memberMatch;
+      });
       const tabConfig = {
         ltv: { title: "LTV分月", headers: Array.from({ length: 13 }, (_, index) => `LT${index}`), key: "ltv", formatter: formatRatio },
         orders: { title: "周期复购-订单", headers: Array.from({ length: 13 }, (_, index) => `M${index}`), key: "repeatOrders", formatter: formatRatio },
@@ -1594,16 +1769,21 @@
             </div>
           </div>
           <div class="toolbar-right">
-            <div class="form-group">
-              <label>渠道筛选：</label>
-              <select class="field" data-field="renewalChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
-            <div class="form-group">
-              <label>VIP类型：</label>
-              <select class="field" data-field="renewalVip">${optionMarkup(vipOptions, vip)}</select>
-            </div>
+            ${renderGrowthFilters({
+              channelField: "renewalChannel",
+              channelValue: channel,
+              countryField: "renewalCountry",
+              countryValue: country,
+              systemField: "renewalSystem",
+              systemValue: system,
+              memberField: "renewalMemberLevel",
+              memberValue: memberLevel,
+              vipField: "renewalVip",
+              vipValue: vip
+            })}
             <button class="btn primary" data-action="query" data-scope="续费数据表">查询</button>
             <button class="btn primary" data-action="export" data-scope="续费数据表">导出</button>
+            <button class="btn primary" data-action="go-renewal-detail">查看分日明细</button>
           </div>
         </div>
         <div class="table-panel">
@@ -1633,9 +1813,118 @@
       `;
     }
 
+    function renderDailyRenewalDetailPage() {
+      const channel = state.filters.renewalChannel;
+      const vip = state.filters.renewalVip;
+      const country = state.filters.renewalCountry;
+      const system = state.filters.renewalSystem;
+      const memberLevel = state.filters.renewalMemberLevel;
+      const rows = dailyRenewalRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel === channel;
+        const vipMatch = vip === "all" || row.vip === vip;
+        const countryMatch = country === "all" || row.country === country;
+        const systemMatch = system === "all" || row.system === system;
+        const memberMatch = memberLevel === "all" || row.memberLevel === memberLevel;
+        return channelMatch && vipMatch && countryMatch && systemMatch && memberMatch;
+      });
+      const tabConfig = {
+        ltv: { title: "分日付费LTV", key: "dailyLtv", formatter: formatRatio },
+        orders: { title: "分日复购订单", key: "dailyOrders", formatter: formatRatio },
+        amount: { title: "分日复购金额", key: "dailyAmount", formatter: formatMoney }
+      };
+      const current = tabConfig[state.dailyRenewalTab];
+      const dayHeaders = Array.from({ length: 31 }, (_, index) => `D${index + 1}`);
+      const body = rows.length ? rows.map((row) => `
+        <tr>
+          <td>${row.firstPayDate}</td>
+          <td>${row.memberLevel}</td>
+          <td>${row.vip}</td>
+          <td>${row.country}</td>
+          <td>${row.system}</td>
+          <td>${row.channel}</td>
+          <td>${formatMoney(row.firstUsers)}</td>
+          <td>${formatMoney(row.firstAmount)}</td>
+          <td>${formatMoney(row.arppu)}</td>
+          ${row[current.key].map((value) => `<td>${current.formatter(value)}</td>`).join("")}
+        </tr>
+      `).join("") : emptyTableRow(9 + dayHeaders.length);
+
+      return `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="segmented outline">
+              <button class="seg-btn ${state.dailyRenewalTab === "ltv" ? "active" : ""}" data-action="set-daily-renewal-tab" data-tab="ltv">付费LTV</button>
+              <button class="seg-btn ${state.dailyRenewalTab === "orders" ? "active" : ""}" data-action="set-daily-renewal-tab" data-tab="orders">复购订单</button>
+              <button class="seg-btn ${state.dailyRenewalTab === "amount" ? "active" : ""}" data-action="set-daily-renewal-tab" data-tab="amount">复购金额</button>
+            </div>
+            ${renderGrowthFilters({
+              channelField: "renewalChannel",
+              channelValue: channel,
+              countryField: "renewalCountry",
+              countryValue: country,
+              systemField: "renewalSystem",
+              systemValue: system,
+              memberField: "renewalMemberLevel",
+              memberValue: memberLevel,
+              vipField: "renewalVip",
+              vipValue: vip
+            })}
+            <div class="form-group">
+              <label>首次付费日期：</label>
+              <div class="date-range compact">
+                <span class="date-icon">🕘</span>
+                <input class="date-field" placeholder="开始时间" readonly>
+                <span class="divider">-</span>
+                <input class="date-field" placeholder="截止时间" readonly>
+              </div>
+            </div>
+            <span class="chip">二级看板</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn ghost" data-action="switch-page" data-page="renewal">返回续费数据表</button>
+            <button class="btn primary" data-action="query" data-scope="分日续费明细">查询</button>
+            <button class="btn primary" data-action="export" data-scope="分日续费明细">导出</button>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">首次付费日期</th>
+                  <th rowspan="2">会员等级</th>
+                  <th rowspan="2">VIP类型</th>
+                  <th rowspan="2">国家</th>
+                  <th rowspan="2">端口</th>
+                  <th rowspan="2">渠道</th>
+                  <th rowspan="2">首次付费用户</th>
+                  <th rowspan="2">首次付费金额</th>
+                  <th rowspan="2">ARPPU</th>
+                  <th colspan="${dayHeaders.length}">${current.title}</th>
+                </tr>
+                <tr>
+                  ${dayHeaders.map((item) => `<th>${item}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>${body}</tbody>
+            </table>
+          </div>
+          ${renderPagination(128)}
+        </div>
+        <div class="note-strip">
+          本页为续费数据表点击“查看分日明细”后的二级看板，用于按首次付费日期查看 D1-D31 的分日续费表现；筛选项与续费数据表保持一致。
+        </div>
+      `;
+    }
+
     function renderAdCostPage() {
       const channel = state.filters.adChannel;
-      const rows = state.adCostRows.filter((row) => channel === "all" || row.channel.toLowerCase() === channel);
+      const system = state.filters.adSystem;
+      const rows = state.adCostRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel.toLowerCase() === channel;
+        const systemMatch = system === "all" || row.system === system;
+        return channelMatch && systemMatch;
+      });
       const body = rows.length ? rows.map((row) => `
         <tr>
           <td>${row.date}</td>
@@ -1667,10 +1956,12 @@
                 <input class="date-field" placeholder="截止时间" readonly>
               </div>
             </div>
-            <div class="form-group">
-              <label>渠道筛选:</label>
-              <select class="field" data-field="adChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
+            ${renderPortChannelFilters({
+              channelField: "adChannel",
+              channelValue: channel,
+              systemField: "adSystem",
+              systemValue: system
+            })}
             <div class="form-group">
               <label>操作时间:</label>
               <div class="date-range compact">
@@ -1715,7 +2006,18 @@
 
     function renderRoiPage() {
       const channel = state.filters.roiChannel;
-      const rows = roiRows.filter((row) => channel === "all" || row.channel === channel);
+      const country = state.filters.roiCountry;
+      const system = state.filters.roiSystem;
+      const memberLevel = state.filters.roiMemberLevel;
+      const vipSku = state.filters.roiVipSku;
+      const rows = roiRows.filter((row) => {
+        const channelMatch = channel === "all" || row.channel === channel;
+        const countryMatch = country === "all" || row.country === country;
+        const systemMatch = system === "all" || row.system === system;
+        const memberMatch = memberLevel === "all" || row.memberLevel === memberLevel;
+        const vipMatch = vipSku === "all" || row.vipSku === vipSku;
+        return channelMatch && countryMatch && systemMatch && memberMatch && vipMatch;
+      });
       const tabConfig = {
         rate: {
           title: "分月付费率",
@@ -1783,10 +2085,18 @@
             </div>
           </div>
           <div class="toolbar-right">
-            <div class="form-group">
-              <label>渠道筛选：</label>
-              <select class="field" data-field="roiChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
+            ${renderGrowthFilters({
+              channelField: "roiChannel",
+              channelValue: channel,
+              countryField: "roiCountry",
+              countryValue: country,
+              systemField: "roiSystem",
+              systemValue: system,
+              memberField: "roiMemberLevel",
+              memberValue: memberLevel,
+              vipField: "roiVipSku",
+              vipValue: vipSku
+            })}
             <button class="btn primary" data-action="query" data-scope="ROI数据看板">查询</button>
             <button class="btn primary" data-action="export" data-scope="ROI数据看板">导出</button>
           </div>
@@ -1848,14 +2158,12 @@
       return `
         <div class="toolbar">
           <div class="toolbar-left">
-            <div class="form-group">
-              <label>渠道筛选：</label>
-              <select class="field" data-field="detailChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
-            <div class="form-group">
-              <label>系统：</label>
-              <select class="field" data-field="detailSystem">${optionMarkup(systemOptions, system)}</select>
-            </div>
+            ${renderPortChannelFilters({
+              channelField: "detailChannel",
+              channelValue: channel,
+              systemField: "detailSystem",
+              systemValue: system
+            })}
             <div class="form-group">
               <label>日期：</label>
               <div class="date-range compact">
@@ -1921,10 +2229,12 @@
     function renderDailyRetentionDetailPage() {
       const channel = state.filters.dailyRetentionChannel;
       const system = state.filters.dailyRetentionSystem;
+      const country = state.filters.dailyRetentionCountry;
       const rows = dailyRetentionRows.filter((row) => {
         const channelMatch = channel === "all" || row.channel === channel;
         const systemMatch = system === "all" || row.system === system;
-        return channelMatch && systemMatch;
+        const countryMatch = country === "all" || row.country === country;
+        return channelMatch && systemMatch && countryMatch;
       });
       const headers = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D14", "D30", "M1", "M2"];
       const body = rows.length ? rows.map((row) => `
@@ -1944,14 +2254,14 @@
               <button class="seg-btn ${state.dailyRetentionTab === "count" ? "active" : ""}" data-action="set-daily-retention-tab" data-tab="count">分日留存数</button>
               <button class="seg-btn ${state.dailyRetentionTab === "rate" ? "active" : ""}" data-action="set-daily-retention-tab" data-tab="rate">分日留存率</button>
             </div>
-            <div class="form-group">
-              <label>渠道筛选：</label>
-              <select class="field" data-field="dailyRetentionChannel">${optionMarkup(channelOptions, channel)}</select>
-            </div>
-            <div class="form-group">
-              <label>系统：</label>
-              <select class="field" data-field="dailyRetentionSystem">${optionMarkup(systemOptions, system)}</select>
-            </div>
+            ${renderSourceFilters({
+              channelField: "dailyRetentionChannel",
+              channelValue: channel,
+              countryField: "dailyRetentionCountry",
+              countryValue: country,
+              systemField: "dailyRetentionSystem",
+              systemValue: system
+            })}
             <div class="form-group">
               <label>注册日期：</label>
               <div class="date-range compact">
@@ -2144,6 +2454,7 @@
         retention: renderRetentionPage,
         detail: renderDetailPage,
         dailyRetentionDetail: renderDailyRetentionDetailPage,
+        dailyRenewalDetail: renderDailyRenewalDetailPage,
         renewal: renderRenewalPage,
         adCost: renderAdCostPage,
         roi: renderRoiPage
@@ -2297,6 +2608,12 @@
         return;
       }
 
+      if (action === "set-daily-renewal-tab") {
+        state.dailyRenewalTab = actionNode.dataset.tab;
+        renderPage();
+        return;
+      }
+
       if (action === "set-renewal-tab") {
         state.renewalTab = actionNode.dataset.tab;
         renderPage();
@@ -2326,9 +2643,18 @@
 
       if (action === "go-detail") {
         state.filters.dailyRetentionChannel = state.filters.retentionChannel;
+        state.filters.dailyRetentionCountry = state.filters.retentionCountry;
+        state.filters.dailyRetentionSystem = state.filters.retentionSystem;
         state.page = "dailyRetentionDetail";
         render();
         flash("已从用户留存表进入分日留存明细二级看板，并带入当前渠道筛选。");
+        return;
+      }
+
+      if (action === "go-renewal-detail") {
+        state.page = "dailyRenewalDetail";
+        render();
+        flash("已从续费数据表进入分日续费明细二级看板，并带入当前筛选条件。");
         return;
       }
 
